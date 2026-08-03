@@ -7,8 +7,11 @@ Design doc: [docs/DESIGN.md](docs/DESIGN.md)
 
 ## Play
 
+- **Play it in your browser**: https://gregnazario.github.io/mochi-meadows/  (GitHub Pages)
 - **macOS**: `MochiMeadows/Builds/Mac/MochiMeadows.app`
-- **WebGL**: serve `MochiMeadows/Builds/WebGL` (e.g. `python3 -m http.server 8000` in that folder, open `http://localhost:8000`)
+- **WebGL (local)**: serve `MochiMeadows/Builds/WebGL` (e.g. `python3 -m http.server 8000`)
+- **iOS**: `Tools/Mochi Meadows/Build iOS (Xcode project)` — for the Simulator
+  add `-simulator` (builds arm64; then open `Builds/iOS` in Xcode and run)
 - **Windows/Linux**: add the module in Unity Hub, then `Tools/Mochi Meadows/Build Windows` / `Build Linux`
 
 ### Controls
@@ -64,9 +67,11 @@ Design doc: [docs/DESIGN.md](docs/DESIGN.md)
 
 ## Dev tools
 
-- `-playtest [-playtest-days N]` runs a headless simulated farmer for N days
-  and writes a balance report to `playtest_report.txt` (in
-  `~/Library/Application Support/Mochi Meadows/...`).
+- `-playtest [-playtest-days N] [-playtest-seed S]` runs a headless simulated
+  farmer (deterministic with a seed) and writes a balance report to
+  `playtest_report.txt`, including a save/load round-trip check.
+- Verified: 28-day full-year soak with seed 777: 60 -> 2863 coins, 71
+  harvests, round-trip PASS, zero exceptions.
 - `-screenshot-game [-day N]` / `-screenshot-shop` capture verification shots.
 - Latest playtest (28 days): 60 coins -> 2032 coins, 71 harvests, PASS.
 
