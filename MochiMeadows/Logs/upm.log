@@ -1,0 +1,16 @@
+[2026-08-03T20:11:53.820Z][INFO] Command-line: /Applications/Unity/Hub/Editor/6000.5.6f1/Unity.app/Contents/Helpers/PackageManager/Server/UnityPackageManager server -s 15410 --ipc-path /tmp/Unity-Upm-15410.sock -l 2 --log-file /Users/greg/git/kawaii-game/MochiMeadows/Logs/upm.log
+[2026-08-03T20:11:53.821Z][INFO] Detected environment variables:
+  NO_PROXY=127.0.0.1,localhost,::1
+  no_proxy=127.0.0.1,localhost,::1
+[2026-08-03T20:11:53.828Z][INFO] IPC server started (IPC path=/tmp/Unity-Upm-15410.sock).
+[2026-08-03T20:11:53.828Z][INFO] Hint: To connect to this UPM instance, launch Unity with the command-line parameter -upmIpcPath Upm-15410.
+[2026-08-03T20:11:54.698Z][INFO] project:list-packages <-- Request received
+params: {}
+[2026-08-03T20:11:54.741Z][INFO] project:list-packages --> 200 (43 ms)
+[2026-08-03T20:11:54.799Z][INFO] project:resolve-packages <-- Request received
+params: {}
+[2026-08-03T20:11:55.504Z][INFO] project:resolve-packages --> 200 (705 ms)
+[2026-08-03T20:12:00.156Z][INFO] project:list-packages <-- Request received
+params: {}
+[2026-08-03T20:12:00.179Z][INFO] project:list-packages --> 200 (23 ms)
+[2026-08-03T20:13:32.262Z][INFO] Received shutdown request (SIGTERM), shutting down Unity Package Manager
