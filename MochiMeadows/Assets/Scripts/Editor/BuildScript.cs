@@ -84,6 +84,8 @@ namespace MochiMeadows.EditorTools
                 // GitHub Pages / static hosts don't send Content-Encoding: br;
                 // this makes the loader decompress brotli in the browser instead.
                 PlayerSettings.WebGL.decompressionFallback = true;
+                // Custom template: canvas fills the browser window (responsive).
+                PlayerSettings.WebGL.template = "PROJECT:MochiMeadows";
             }
         }
     }
