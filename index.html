@@ -103,9 +103,13 @@
 
 
       } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-        canvas.style.width = "960px";
-        canvas.style.height = "600px";
+        // Desktop style: fill the browser window; the game letterboxes itself.
+        function fitCanvas() {
+          canvas.style.width = window.innerWidth + "px";
+          canvas.style.height = window.innerHeight + "px";
+        }
+        fitCanvas();
+        window.addEventListener("resize", fitCanvas);
       }
 
       document.querySelector("#unity-loading-bar").style.display = "block";
