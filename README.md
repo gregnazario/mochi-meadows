@@ -8,6 +8,11 @@ Design doc: [docs/DESIGN.md](docs/DESIGN.md)
 ## Play
 
 - **Play it in your browser**: https://gregnazario.github.io/mochi-meadows/  (GitHub Pages)
+
+  Note: the WebGL build uses Unity's brotli *decompression fallback* so it
+  works on static hosts (like GitHub Pages) that don't send
+  `Content-Encoding: br`. If you host it elsewhere, either keep the fallback
+  or add the header to the `.br` files.
 - **macOS**: `MochiMeadows/Builds/Mac/MochiMeadows.app`
 - **WebGL (local)**: serve `MochiMeadows/Builds/WebGL` (e.g. `python3 -m http.server 8000`)
 - **iOS**: `Tools/Mochi Meadows/Build iOS (Xcode project)` — for the Simulator

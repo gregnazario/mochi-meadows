@@ -81,6 +81,9 @@ namespace MochiMeadows.EditorTools
             {
                 PlayerSettings.WebGL.memorySize = 256;
                 PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
+                // GitHub Pages / static hosts don't send Content-Encoding: br;
+                // this makes the loader decompress brotli in the browser instead.
+                PlayerSettings.WebGL.decompressionFallback = true;
             }
         }
     }
