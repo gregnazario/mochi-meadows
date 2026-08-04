@@ -28,7 +28,7 @@ namespace MochiMeadows.Game
         void Update()
         {
             var gm = GameManager.I;
-            if (gm == null || gm.IsSleeping) return;
+            if (gm == null || gm.IsSleeping || gm.IsPaused) return;
 
             if (gm.IsNight)
             {

@@ -54,7 +54,8 @@ namespace MochiMeadows.Ui
         List<GameObject> makeoverRows = new List<GameObject>();
         RectTransform questList;
         List<GameObject> questRows = new List<GameObject>();
-        Button menuSaveBtn, menuQuitBtn;
+        Button menuSaveBtn, menuQuitBtn, menuResumeBtn, menuTitleBtn;
+        GameObject controlsPanel;
 
         // speech bubble
         Canvas bubbleCanvas;
@@ -107,6 +108,7 @@ namespace MochiMeadows.Ui
             BuildScrapbook();
             BuildTitle();
             BuildMenu();
+            BuildControls();
 
             // respond to game events
             var gm = GameManager.I;
@@ -422,18 +424,18 @@ hudRoot = new GameObject("Hud");
             UpdateFishing();
 
             var input = InputService.I;
-            if (input != null && input.ClosePressed)
+            if (input != null && (input.ClosePressed || input.MenuPressed))
             {
-                if (menuPanel != null && menuPanel.activeSelf) menuPanel.SetActive(false);
-                else if (questPanel != null && questPanel.activeSelf) questPanel.SetActive(false);
-                else if (makeoverPanel != null && makeoverPanel.activeSelf) makeoverPanel.SetActive(false);
-                else if (fishPanel != null && fishPanel.activeSelf && !fishingDone) { fishingDone = true; StartCoroutine(CloseFishing(0f)); }
-                else if (shopPanel != null && shopPanel.activeSelf) shopPanel.SetActive(false);
-            }
-            if (input != null && input.MenuPressed)
-            {
-                if (menuPanel != null && menuPanel.activeSelf) menuPanel.SetActive(false);
-                else if (GameManager.I != null && GameManager.I.GameStarted) OpenMenu();
+                bool handled = false;
+                if (menuPanel != null && menuPanel.activeSelf) { CloseMenu(); handled = true; }
+                else if (controlsPanel != null && controlsPanel.activeSelf) { controlsPanel.SetActive(false); handled = true; }
+                else if (questPanel != null && questPanel.activeSelf) { questPanel.SetActive(false); handled = true; }
+                else if (makeoverPanel != null && makeoverPanel.activeSelf) { makeoverPanel.SetActive(false); handled = true; }
+                else if (fishPanel != null && fishPanel.activeSelf && !fishingDone) { fishingDone = true; StartCoroutine(CloseFishing(0f)); handled = true; }
+                else if (cookPanel != null && cookPanel.activeSelf) { cookPanel.SetActive(false); handled = true; }
+                else if (scrapPanel != null && scrapPanel.activeSelf) { scrapPanel.SetActive(false); handled = true; }
+                else if (shopPanel != null && shopPanel.activeSelf) { shopPanel.SetActive(false); handled = true; }
+                else if (GameManager.I != null && GameManager.I.GameStarted) { OpenMenu(); handled = true; }
             }
         }
 
@@ -2079,7 +2081,7 @@ titlePanel = new GameObject("Title");
             cont.onClick.AddListener(() => StartGame(true));
             cont.gameObject.SetActive(SaveSystem.HasSave);
 
-            var hint = CreateText(titlePanel.transform, "Hint", "WASD / arrows to move   •   Space to act   •   keys 1-7 or tap for tools   •   touch joystick on mobile", 22, new Color(1, 1, 1, 0.7f));
+            var hint = CreateText(titlePanel.transform, "Hint", "WASD / arrows to move   •   Space to act   •   keys 1-9 for tools   •   touch joystick + Act button on mobile", 22, new Color(1, 1, 1, 0.7f));
             hint.rectTransform.anchorMin = new Vector2(0.5f, 0.08f);
             hint.rectTransform.anchorMax = new Vector2(0.5f, 0.08f);
             hint.rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -2087,6 +2089,16 @@ titlePanel = new GameObject("Title");
             hint.alignment = TextAnchor.MiddleCenter;
 
             // settings gear on title
+            var controlsBtn = CreateButton(titlePanel.transform, "ControlsBtn", "Controls", 24, Color.white, out var controlsBtnBg);
+            Rt(controlsBtn).anchorMin = new Vector2(0.5f, 0.11f);
+            Rt(controlsBtn).anchorMax = new Vector2(0.5f, 0.11f);
+            Rt(controlsBtn).pivot = new Vector2(0.5f, 0.5f);
+            Rt(controlsBtn).sizeDelta = new Vector2(220, 56);
+            controlsBtnBg.color = new Color(0.9f, 0.84f, 0.98f, 1);
+            controlsBtnBg.sprite = RoundedSprite(Palette.Lavender);
+            controlsBtnBg.type = Image.Type.Sliced;
+            controlsBtn.onClick.AddListener(() => controlsPanel.SetActive(true));
+
             var gear = CreateButton(titlePanel.transform, "Gear", "⚙", 30, Color.white, out var gearBg);
             Rt(gear).anchorMin = new Vector2(1, 1);
             Rt(gear).anchorMax = new Vector2(1, 1);
@@ -2124,8 +2136,6 @@ titlePanel = new GameObject("Title");
         {
             menuPanel = new GameObject("MenuPanel");
             menuPanel.transform.SetParent(Root, false);
-menuPanel = new GameObject("MenuPanel");
-            menuPanel.transform.SetParent(Root, false);
             var menuRt = menuPanel.AddComponent<RectTransform>();
             menuRt.anchorMin = Vector2.zero; menuRt.anchorMax = Vector2.one;
             menuRt.offsetMin = Vector2.zero; menuRt.offsetMax = Vector2.zero;
@@ -2140,87 +2150,123 @@ menuPanel = new GameObject("MenuPanel");
             panel.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             panel.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             panel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            panel.rectTransform.sizeDelta = new Vector2(460, 420);
+            panel.rectTransform.sizeDelta = new Vector2(520, 620);
             panel.type = Image.Type.Sliced;
 
-            var title = CreateText(panel.transform, "Title", "Cozy Menu", 36, Palette.Chocolate);
+            var title = CreateText(panel.transform, "Title", "Pause", 36, Palette.Chocolate);
             AddOutline(title, 1f, new Color(0.36f, 0.28f, 0.40f, 0.5f));
             title.rectTransform.anchorMin = new Vector2(0.5f, 1);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1);
             title.rectTransform.pivot = new Vector2(0.5f, 1);
-            title.rectTransform.anchoredPosition = new Vector2(0, -24);
-            title.rectTransform.sizeDelta = new Vector2(400, 50);
+            title.rectTransform.anchoredPosition = new Vector2(0, -22);
+            title.rectTransform.sizeDelta = new Vector2(440, 48);
             title.alignment = TextAnchor.MiddleCenter;
 
-            float y = -110;
+            // --- actions (left column) ---
+            float y = -92;
+            var resume = CreateButton(panel.transform, "Resume", "▶ Resume", 26, Color.white, out var resumeBg);
+            menuResumeBtn = resume;
+            Rt(resume).anchorMin = new Vector2(0.5f, 1);
+            Rt(resume).anchorMax = new Vector2(0.5f, 1);
+            Rt(resume).pivot = new Vector2(0.5f, 1);
+            Rt(resume).anchoredPosition = new Vector2(0, y);
+            Rt(resume).sizeDelta = new Vector2(440, 62);
+            resumeBg.color = new Color(0.75f, 0.95f, 0.8f, 1);
+            resumeBg.sprite = RoundedSprite(Palette.Mint);
+            resumeBg.type = Image.Type.Sliced;
+            resume.onClick.AddListener(() => CloseMenu());
+            y -= 76;
+
             var save = CreateButton(panel.transform, "Save", "Save now", 26, Color.white, out var saveBg);
             menuSaveBtn = save;
             Rt(save).anchorMin = new Vector2(0.5f, 1);
             Rt(save).anchorMax = new Vector2(0.5f, 1);
             Rt(save).pivot = new Vector2(0.5f, 1);
             Rt(save).anchoredPosition = new Vector2(0, y);
-            Rt(save).sizeDelta = new Vector2(340, 62);
-            saveBg.color = new Color(0.75f, 0.95f, 0.8f, 1);
-            saveBg.sprite = RoundedSprite(Palette.Mint);
+            Rt(save).sizeDelta = new Vector2(440, 62);
+            saveBg.color = new Color(0.8f, 0.87f, 0.98f, 1);
+            saveBg.sprite = RoundedSprite(Palette.BabyBlue);
             saveBg.type = Image.Type.Sliced;
-            save.onClick.AddListener(() => { SaveSystem.Save(GameManager.I); GameManager.I.Announce("Saved! <3"); menuPanel.SetActive(false); });
-            y -= 80;
+            save.onClick.AddListener(() => { SaveSystem.Save(GameManager.I); GameManager.I.Announce("Saved! <3"); });
+            y -= 76;
 
-            var music = CreateButton(panel.transform, "Music", "Toggle music", 26, Color.white, out var musicBg);
-            Rt(music).anchorMin = new Vector2(0.5f, 1);
-            Rt(music).anchorMax = new Vector2(0.5f, 1);
-            Rt(music).pivot = new Vector2(0.5f, 1);
-            Rt(music).anchoredPosition = new Vector2(0, y);
-            Rt(music).sizeDelta = new Vector2(340, 62);
-            musicBg.color = new Color(0.8f, 0.85f, 0.98f, 1);
-            musicBg.sprite = RoundedSprite(Palette.BabyBlue);
-            musicBg.type = Image.Type.Sliced;
-            music.onClick.AddListener(() => GameManager.I.Audio.ToggleMusic());
-            y -= 80;
+            var controls = CreateButton(panel.transform, "Controls", "Controls", 26, Color.white, out var controlsBg);
+            Rt(controls).anchorMin = new Vector2(0.5f, 1);
+            Rt(controls).anchorMax = new Vector2(0.5f, 1);
+            Rt(controls).pivot = new Vector2(0.5f, 1);
+            Rt(controls).anchoredPosition = new Vector2(0, y);
+            Rt(controls).sizeDelta = new Vector2(440, 62);
+            controlsBg.color = new Color(0.9f, 0.84f, 0.98f, 1);
+            controlsBg.sprite = RoundedSprite(Palette.Lavender);
+            controlsBg.type = Image.Type.Sliced;
+            controls.onClick.AddListener(() => controlsPanel.SetActive(true));
+            y -= 76;
 
-            var quit = CreateButton(panel.transform, "Quit", "Save & quit", 26, Color.white, out var quitBg);
+            var toTitle = CreateButton(panel.transform, "ToTitle", "Return to Title", 26, Color.white, out var toTitleBg);
+            menuTitleBtn = toTitle;
+            Rt(toTitle).anchorMin = new Vector2(0.5f, 1);
+            Rt(toTitle).anchorMax = new Vector2(0.5f, 1);
+            Rt(toTitle).pivot = new Vector2(0.5f, 1);
+            Rt(toTitle).anchoredPosition = new Vector2(0, y);
+            Rt(toTitle).sizeDelta = new Vector2(440, 62);
+            toTitleBg.color = new Color(0.98f, 0.88f, 0.75f, 1);
+            toTitleBg.sprite = RoundedSprite(Palette.Peach);
+            toTitleBg.type = Image.Type.Sliced;
+            toTitle.onClick.AddListener(() => ReturnToTitle());
+            y -= 76;
+
+            var quit = CreateButton(panel.transform, "Quit", "Save & quit", 24, Color.white, out var quitBg);
             menuQuitBtn = quit;
             Rt(quit).anchorMin = new Vector2(0.5f, 1);
             Rt(quit).anchorMax = new Vector2(0.5f, 1);
             Rt(quit).pivot = new Vector2(0.5f, 1);
             Rt(quit).anchoredPosition = new Vector2(0, y);
-            Rt(quit).sizeDelta = new Vector2(340, 62);
+            Rt(quit).sizeDelta = new Vector2(440, 58);
             quitBg.color = new Color(0.95f, 0.8f, 0.8f, 1);
             quitBg.sprite = RoundedSprite(Palette.Blush);
             quitBg.type = Image.Type.Sliced;
             quit.onClick.AddListener(() =>
             {
                 SaveSystem.Save(GameManager.I);
-                menuPanel.SetActive(false);
+                CloseMenu();
 #if UNITY_STANDALONE || UNITY_EDITOR
                 Application.Quit();
 #endif
             });
+            y -= 70;
 
-            // sound settings
-            float sy = -170;
+            // --- settings (sound) ---
+            var settingsTitle = CreateText(panel.transform, "SettingsTitle", "~ Sound ~", 22, Palette.DeepPink);
+            settingsTitle.rectTransform.anchorMin = new Vector2(0.5f, 1);
+            settingsTitle.rectTransform.anchorMax = new Vector2(0.5f, 1);
+            settingsTitle.rectTransform.pivot = new Vector2(0.5f, 1);
+            settingsTitle.rectTransform.anchoredPosition = new Vector2(0, y);
+            settingsTitle.rectTransform.sizeDelta = new Vector2(440, 30);
+            settingsTitle.alignment = TextAnchor.MiddleCenter;
+            y -= 40;
+
             var musicLabel = CreateText(panel.transform, "MusicLabel", "Music", 24, Palette.Chocolate);
             musicLabel.rectTransform.anchorMin = new Vector2(0.5f, 1);
             musicLabel.rectTransform.anchorMax = new Vector2(0.5f, 1);
             musicLabel.rectTransform.pivot = new Vector2(0.5f, 1);
-            musicLabel.rectTransform.anchoredPosition = new Vector2(-160, sy);
+            musicLabel.rectTransform.anchoredPosition = new Vector2(-120, y);
             musicLabel.rectTransform.sizeDelta = new Vector2(100, 30);
             musicLabel.alignment = TextAnchor.MiddleRight;
 
-            var musicSlider = AddSlider(panel.transform, "MusicSlider", new Vector2(10, sy), 200);
+            var musicSlider = AddSlider(panel.transform, "MusicSlider", new Vector2(60, y), 220);
             musicSlider.value = 1f;
             musicSlider.onValueChanged.AddListener(v => { if (AudioService.I != null) AudioService.I.MusicVolume = v; });
-            sy -= 52;
+            y -= 52;
 
             var sfxLabel = CreateText(panel.transform, "SfxLabel", "SFX", 24, Palette.Chocolate);
             sfxLabel.rectTransform.anchorMin = new Vector2(0.5f, 1);
             sfxLabel.rectTransform.anchorMax = new Vector2(0.5f, 1);
             sfxLabel.rectTransform.pivot = new Vector2(0.5f, 1);
-            sfxLabel.rectTransform.anchoredPosition = new Vector2(-160, sy);
+            sfxLabel.rectTransform.anchoredPosition = new Vector2(-120, y);
             sfxLabel.rectTransform.sizeDelta = new Vector2(100, 30);
             sfxLabel.alignment = TextAnchor.MiddleRight;
 
-            var sfxSlider = AddSlider(panel.transform, "SfxSlider", new Vector2(10, sy), 200);
+            var sfxSlider = AddSlider(panel.transform, "SfxSlider", new Vector2(60, y), 220);
             sfxSlider.value = 1f;
             sfxSlider.onValueChanged.AddListener(v => { if (AudioService.I != null) AudioService.I.SfxVolume = v; });
 
@@ -2233,7 +2279,7 @@ menuPanel = new GameObject("MenuPanel");
             closeBg.color = new Color(0.9f, 0.6f, 0.65f, 1);
             closeBg.sprite = RoundedSprite(Palette.Blush);
             closeBg.type = Image.Type.Sliced;
-            close.onClick.AddListener(() => menuPanel.SetActive(false));
+            close.onClick.AddListener(() => CloseMenu());
 
             menuPanel.SetActive(false);
         }
@@ -2289,12 +2335,168 @@ menuPanel = new GameObject("MenuPanel");
             return slider;
         }
 
+        void BuildControls()
+        {
+            controlsPanel = new GameObject("ControlsPanel");
+            controlsPanel.transform.SetParent(Root, false);
+            var cRt = controlsPanel.AddComponent<RectTransform>();
+            cRt.anchorMin = Vector2.zero; cRt.anchorMax = Vector2.one;
+            cRt.offsetMin = Vector2.zero; cRt.offsetMax = Vector2.zero;
+
+            var backdrop = CreateImage(controlsPanel.transform, "Backdrop", null, new Color(0.15f, 0.12f, 0.3f, 0.55f));
+            backdrop.rectTransform.anchorMin = Vector2.zero;
+            backdrop.rectTransform.anchorMax = Vector2.one;
+            backdrop.rectTransform.offsetMin = Vector2.zero;
+            backdrop.rectTransform.offsetMax = Vector2.zero;
+            backdrop.rectTransform.SetAsFirstSibling();
+
+            var panel = CreateImage(controlsPanel.transform, "Panel", RoundedSprite(Palette.Cream), Color.white);
+            panel.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            panel.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            panel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            panel.rectTransform.sizeDelta = new Vector2(680, 700);
+            panel.type = Image.Type.Sliced;
+
+            var title = CreateText(panel.transform, "Title", "Controls", 36, Palette.Chocolate);
+            AddOutline(title, 1f, new Color(0.36f, 0.28f, 0.40f, 0.5f));
+            title.rectTransform.anchorMin = new Vector2(0.5f, 1);
+            title.rectTransform.anchorMax = new Vector2(0.5f, 1);
+            title.rectTransform.pivot = new Vector2(0.5f, 1);
+            title.rectTransform.anchoredPosition = new Vector2(0, -22);
+            title.rectTransform.sizeDelta = new Vector2(600, 48);
+            title.alignment = TextAnchor.MiddleCenter;
+
+            var list = new GameObject("ControlsList").AddComponent<RectTransform>();
+            list.SetParent(panel.transform, false);
+            list.anchorMin = new Vector2(0.5f, 1);
+            list.anchorMax = new Vector2(0.5f, 1);
+            list.pivot = new Vector2(0.5f, 1);
+            list.anchoredPosition = new Vector2(0, -84);
+            list.sizeDelta = new Vector2(620, 540);
+
+            float y = 0;
+            AddControlSection(list, "Desktop", new[]
+            {
+                ("WASD / arrow keys", "Move"),
+                ("Space / E / click", "Act: use tool, talk, harvest"),
+                ("1 - 9 / scroll wheel", "Choose hotbar item"),
+                ("Esc", "Pause menu"),
+            }, ref y);
+            AddControlSection(list, "Touch", new[]
+            {
+                ("Drag left side", "Move (joystick)"),
+                ("Tap a tile", "Act with the selected tool"),
+                ("Act button", "Act on the tile you face"),
+                ("Tap Mochi / pond / kitchen", "Shop / fishing / cooking"),
+            }, ref y);
+            AddControlSection(list, "Gamepad", new[]
+            {
+                ("Left stick", "Move"),
+                ("A button", "Act"),
+                ("Start / M", "Pause menu"),
+                ("B button", "Back / close UI"),
+            }, ref y);
+
+            var back = CreateButton(panel.transform, "Back", "← Back", 26, Color.white, out var backBg);
+            Rt(back).anchorMin = new Vector2(0.5f, 0);
+            Rt(back).anchorMax = new Vector2(0.5f, 0);
+            Rt(back).pivot = new Vector2(0.5f, 0);
+            Rt(back).anchoredPosition = new Vector2(0, 22);
+            Rt(back).sizeDelta = new Vector2(200, 56);
+            backBg.color = new Color(0.9f, 0.84f, 0.98f, 1);
+            backBg.sprite = RoundedSprite(Palette.Lavender);
+            backBg.type = Image.Type.Sliced;
+            back.onClick.AddListener(() => controlsPanel.SetActive(false));
+
+            controlsPanel.SetActive(false);
+        }
+
+        void AddControlSection(RectTransform list, string header, (string keys, string action)[] rows, ref float y)
+        {
+            var h = CreateText(list, "H" + header, "~ " + header + " ~", 22, Palette.DeepPink);
+            h.rectTransform.anchorMin = new Vector2(0.5f, 1);
+            h.rectTransform.anchorMax = new Vector2(0.5f, 1);
+            h.rectTransform.pivot = new Vector2(0.5f, 1);
+            h.rectTransform.anchoredPosition = new Vector2(0, y);
+            h.rectTransform.sizeDelta = new Vector2(560, 28);
+            h.alignment = TextAnchor.MiddleCenter;
+            y -= 32;
+            foreach (var (keys, action) in rows)
+            {
+                var row = CreateImage(list, "Row" + keys, RoundedSprite(Palette.White), new Color(1, 1, 1, 0.7f));
+                row.rectTransform.anchorMin = new Vector2(0.5f, 1);
+                row.rectTransform.anchorMax = new Vector2(0.5f, 1);
+                row.rectTransform.pivot = new Vector2(0.5f, 1);
+                row.rectTransform.anchoredPosition = new Vector2(0, y);
+                row.rectTransform.sizeDelta = new Vector2(560, 52);
+                row.type = Image.Type.Sliced;
+
+                var k = CreateText(row.transform, "Keys", keys, 22, Palette.Chocolate);
+                k.rectTransform.anchorMin = new Vector2(0, 0);
+                k.rectTransform.anchorMax = new Vector2(1, 1);
+                k.rectTransform.offsetMin = new Vector2(20, 0);
+                k.rectTransform.offsetMax = new Vector2(-280, 0);
+                k.alignment = TextAnchor.MiddleLeft;
+
+                var a = CreateText(row.transform, "Action", action, 19, Palette.DeepPink);
+                a.rectTransform.anchorMin = new Vector2(0, 0);
+                a.rectTransform.anchorMax = new Vector2(1, 1);
+                a.rectTransform.offsetMin = new Vector2(290, 0);
+                a.rectTransform.offsetMax = new Vector2(-20, 0);
+                a.alignment = TextAnchor.MiddleLeft;
+                y -= 58;
+            }
+            y -= 10;
+        }
+
         public void OpenMenu()
         {
             bool started = GameManager.I != null && GameManager.I.GameStarted;
             if (menuSaveBtn != null) menuSaveBtn.gameObject.SetActive(started);
             if (menuQuitBtn != null) menuQuitBtn.gameObject.SetActive(started);
+            if (menuResumeBtn != null) menuResumeBtn.gameObject.SetActive(started);
+            if (menuTitleBtn != null) menuTitleBtn.gameObject.SetActive(started);
             menuPanel.SetActive(true);
+            if (GameManager.I != null && started) GameManager.I.IsPaused = true;
+        }
+
+        public void CloseMenu()
+        {
+            menuPanel.SetActive(false);
+            if (GameManager.I != null) GameManager.I.IsPaused = false;
+        }
+
+        public void ReturnToTitle()
+        {
+            var gm = GameManager.I;
+            if (gm != null && gm.GameStarted)
+            {
+                SaveSystem.Save(gm);
+                gm.GameStarted = false;
+                gm.IsPaused = false;
+            }
+            if (shopPanel != null) shopPanel.SetActive(false);
+            if (questPanel != null) questPanel.SetActive(false);
+            if (makeoverPanel != null) makeoverPanel.SetActive(false);
+            if (decorPanel != null) decorPanel.SetActive(false);
+            if (fishPanel != null) fishPanel.SetActive(false);
+            if (cookPanel != null) cookPanel.SetActive(false);
+            if (scrapPanel != null) scrapPanel.SetActive(false);
+            if (controlsPanel != null) controlsPanel.SetActive(false);
+            CloseMenu();
+            titlePanel.SetActive(true);
+            RefreshTitleButtons();
+        }
+
+        public void ShowControls()
+        {
+            if (controlsPanel != null) controlsPanel.SetActive(true);
+        }
+
+        public void RefreshTitleButtons()
+        {
+            var cont = titlePanel != null ? titlePanel.transform.Find("Continue") : null;
+            if (cont != null) cont.gameObject.SetActive(SaveSystem.HasSave);
         }
 
         // --- refresh helpers ---
@@ -2425,7 +2627,13 @@ menuPanel = new GameObject("MenuPanel");
             img.color = Color.white;
             var btn = go.AddComponent<Button>();
             btn.transition = Selectable.Transition.None;
-            var labelGo = CreateText(go.transform, "Label", label, size, textColor);
+            // pastel buttons need dark text: white-on-light is illegible.
+            // Callers that truly want white (e.g. color swatches) set the label
+            // color explicitly after creation.
+            Color text = (textColor.r > 0.85f && textColor.g > 0.85f && textColor.b > 0.85f)
+                ? Palette.Chocolate
+                : textColor;
+            var labelGo = CreateText(go.transform, "Label", label, size, text);
             var rt = labelGo.rectTransform;
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;

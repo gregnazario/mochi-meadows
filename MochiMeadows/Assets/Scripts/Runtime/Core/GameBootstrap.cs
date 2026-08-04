@@ -162,6 +162,7 @@ namespace MochiMeadows.Core
                 GameManager.I.Ui.StartGame(false);
                 if (args.Contains("-screenshot-quest")) GameManager.I.Ui.OpenQuests();
                 else GameManager.I.Ui.OpenMenu();
+                if (args.Contains("-screenshot-controls")) GameManager.I.Ui.ShowControls();
             }
             if (args.Contains("-screenshot-game") || args.Contains("-screenshot-shop") || iosShotMode)
             {

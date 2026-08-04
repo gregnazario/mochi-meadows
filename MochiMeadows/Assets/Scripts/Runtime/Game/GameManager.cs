@@ -141,6 +141,7 @@ namespace MochiMeadows.Game
         public const int EggEnergy = 12;
         public bool IsSleeping;
         public bool GameStarted;
+        public bool IsPaused;
 
         public int[] Hotbar = { 0, 1, 2, 3, 4, 5, 6, 7, 8 }; // slot -> item id (see ItemId)
         public bool DevPlaytest;
@@ -230,7 +231,7 @@ namespace MochiMeadows.Game
 
         void Update()
         {
-            if (!GameStarted || IsSleeping) return;
+            if (!GameStarted || IsSleeping || IsPaused) return;
 
             ClockMinutes += Time.deltaTime * MinutesPerSecond;
             if (ClockMinutes >= DayEndMinute)
@@ -539,6 +540,7 @@ namespace MochiMeadows.Game
                 ResetToNewGame();
             }
             GameStarted = true;
+            IsPaused = false;
             if (Quests != null && (Quests.Today[0] == null || Quests.Today[0].Target == 0)) Quests.NewDay();
             ui.RefreshAll();
             Audio.Play(AudioService.Sfx.Wake);

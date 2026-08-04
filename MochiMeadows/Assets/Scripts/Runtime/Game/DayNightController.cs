@@ -84,6 +84,7 @@ namespace MochiMeadows.Game
         void Update()
         {
             if (Gm == null) return;
+            if (Gm.IsPaused) return;
             float m = Gm.ClockMinutes;
 
             currentSky = SampleSky(m);

@@ -47,7 +47,7 @@ namespace MochiMeadows.Game
             if (input == null || GameManager.I == null) return;
             var gm = GameManager.I;
 
-            if (gm.IsSleeping) return;
+            if (gm.IsSleeping || gm.IsPaused) return;
             if (gm.IsFishing) return;
 
             Vector2 move = input.MoveAxis;

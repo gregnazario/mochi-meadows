@@ -106,6 +106,7 @@ namespace MochiMeadows.Game
         void Update()
         {
             if (gm == null) return;
+            if (gm.IsPaused) return;
 
             // dawn birdsong
             if (!Raining && gm.ClockMinutes > 6 * 60 && gm.ClockMinutes < 8 * 60)

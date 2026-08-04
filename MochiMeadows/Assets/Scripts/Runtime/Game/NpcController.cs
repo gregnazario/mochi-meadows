@@ -40,7 +40,7 @@ namespace MochiMeadows.Game
 
         void Update()
         {
-            if (GameManager.I == null || GameManager.I.IsSleeping) return;
+            if (GameManager.I == null || GameManager.I.IsSleeping || GameManager.I.IsPaused) return;
 
             bool sleeping = IsSleeping;
             zzz.SetActive(sleeping);
