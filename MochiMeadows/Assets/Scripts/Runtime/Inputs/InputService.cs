@@ -17,6 +17,7 @@ namespace MochiMeadows.Inputs
 
         public bool ActionPressed { get; private set; }
         public bool ActionHeld { get; private set; }
+        public bool ActPressed;   // set by the mobile Act button
         public bool ClosePressed { get; private set; }
         public bool MenuPressed { get; private set; }
         public int? HotbarPressed;
@@ -67,6 +68,7 @@ namespace MochiMeadows.Inputs
             TappedNpc = false;
             TapTileX = null;
             TapTileY = null;
+            ActPressed = false;
         }
     }
 }

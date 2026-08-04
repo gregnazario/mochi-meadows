@@ -26,7 +26,7 @@ namespace MochiMeadows.Art
         public static Sprite Chicken0, Chicken1, Chicken2;
         public static Sprite ChickenPink0, ChickenPink1, ChickenPink2;
         public static Sprite Goldfish, BubbleFish, SakuraFish;
-        public static Sprite Egg, KitchenTable, Lantern, Gnome;
+        public static Sprite Egg, KitchenTable, Lantern, Gnome, Beehive, Honey;
 
         static Dictionary<char, Color> PlayerPal, MochiPal, TilePal, CropPal, SkyPal, ItemPal, ChickenPal, ChickenPinkPal, FishPal;
 
@@ -1197,6 +1197,42 @@ namespace MochiMeadows.Art
                 ".....wssw.......",
                 "......ss........",
                 "......ss........",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................");
+
+            Beehive = S("Beehive", true, TilePal,
+                "................",
+                "................",
+                "......yy........",
+                ".....yyyy.......",
+                "....yyyyyy......",
+                "....yccyyy......",
+                "....yyyyyy......",
+                "....yccyyy......",
+                "....yyyyyy......",
+                ".....yyyy.......",
+                "......yy........",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................");
+
+            Honey = S("Honey", true, ItemPal,
+                "................",
+                "..yyyyyyyyyy....",
+                "..yyyccyyycy....",
+                "..yccyyyccyy....",
+                "..yyyyccyycy....",
+                "..yyyccyyycy....",
+                "..yyyyyyyyyy....",
+                "..yyyyyyyyyy....",
+                "................",
                 "................",
                 "................",
                 "................",

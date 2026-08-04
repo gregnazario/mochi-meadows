@@ -15,6 +15,10 @@ namespace MochiMeadows.Game
         public int[] basket = new int[6];
         public int[] fishBasket = new int[3];
         public int eggBasket;
+        public int honeyBasket;
+        public int collectedCropsMask, collectedFishMask;
+        public bool collectedEgg, collectedHoney;
+        public int totalEarned;
         public int[] decorInventory = new int[4];
         public int decorCount;
         public int[] decorX = new int[GameManager.DecorMax];
@@ -28,6 +32,7 @@ namespace MochiMeadows.Game
         public int[] plotStage = new int[FarmGrid.MaxW * FarmGrid.MaxH];
         public int[] plotWateredDays = new int[FarmGrid.MaxW * FarmGrid.MaxH];
         public bool[] plotWatered = new bool[FarmGrid.MaxW * FarmGrid.MaxH];
+        public int[] plotRegrows = new int[FarmGrid.MaxW * FarmGrid.MaxH];
         public float playerX, playerY;
         public float mochiX, mochiY;
         public int activeW, activeH, expansionTier;
@@ -61,6 +66,7 @@ namespace MochiMeadows.Game
                     data.plotStage[i] = p.stage;
                     data.plotWateredDays[i] = p.wateredDays;
                     data.plotWatered[i] = p.wateredToday;
+                    data.plotRegrows[i] = p.regrows;
                 }
             }
             data.day = gm.Day;
@@ -71,6 +77,12 @@ namespace MochiMeadows.Game
             data.basket = (int[])gm.Basket.Clone();
             data.fishBasket = (int[])gm.FishBasket.Clone();
             data.eggBasket = gm.EggBasket;
+            data.honeyBasket = gm.HoneyBasket;
+            data.collectedCropsMask = gm.CollectedCropsMask;
+            data.collectedFishMask = gm.CollectedFishMask;
+            data.collectedEgg = gm.CollectedEgg;
+            data.collectedHoney = gm.CollectedHoney;
+            data.totalEarned = gm.TotalEarned;
             data.decorInventory = (int[])gm.DecorInventory.Clone();
             data.decorCount = gm.DecorCount;
             for (int i = 0; i < gm.DecorCount; i++)

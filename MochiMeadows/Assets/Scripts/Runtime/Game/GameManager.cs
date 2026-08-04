@@ -29,11 +29,20 @@ namespace MochiMeadows.Game
         public int[] Basket = new int[6];             // harvested items
         public int[] FishBasket = new int[3];         // caught fish
         public int EggBasket;                          // chicken eggs
+        public int HoneyBasket;                        // beehive honey
+        public const int HoneySellPrice = 30;
+        public const int HoneyEnergy = 15;
+
+        // --- collection log ---
+        public int CollectedCropsMask;
+        public int CollectedFishMask;
+        public bool CollectedEgg, CollectedHoney;
+        public int TotalEarned;
 
         // --- decorations ---
-        public static readonly string[] DecorNames = { "Fence", "Flower", "Lantern", "Gnome" };
-        public static readonly int[] DecorCosts = { 10, 15, 30, 50 };
-        public int[] DecorInventory = new int[4];
+        public static readonly string[] DecorNames = { "Fence", "Flower", "Lantern", "Gnome", "Beehive" };
+        public static readonly int[] DecorCosts = { 10, 15, 30, 50, 60 };
+        public int[] DecorInventory = new int[5];
         public int DecorPlacing = -1;
         public const int DecorMax = 40;
         public int DecorCount;
@@ -57,7 +66,7 @@ namespace MochiMeadows.Game
         }
 
         public Sprite DecorSprite(int i) =>
-            i == 0 ? SpriteBank.Fence1 : i == 1 ? SpriteBank.Flower0 : i == 2 ? SpriteBank.Lantern : SpriteBank.Gnome;
+            i == 0 ? SpriteBank.Fence1 : i == 1 ? SpriteBank.Flower0 : i == 2 ? SpriteBank.Lantern : i == 3 ? SpriteBank.Gnome : SpriteBank.Beehive;
 
         public void StartPlacing(int i)
         {
@@ -317,6 +326,7 @@ namespace MochiMeadows.Game
         public void AddFish(int fishId, int count)
         {
             FishBasket[fishId] += count;
+            CollectedFishMask |= 1 << fishId;
             Quests?.OnFish();
             OnBasketChanged?.Invoke();
         }
@@ -324,6 +334,7 @@ namespace MochiMeadows.Game
         public void AddToBasket(CropId crop, int count)
         {
             Basket[(int)crop] += count;
+            CollectedCropsMask |= 1 << (int)crop;
             OnBasketChanged?.Invoke();
         }
 
@@ -349,19 +360,30 @@ namespace MochiMeadows.Game
             }
             int eggTotal = EggBasket * EggSellPrice;
             EggBasket = 0;
-            System.Array.Clear(DecorInventory, 0, DecorInventory.Length);
-            DecorPlacing = -1;
-            DecorCount = 0;
-            if (total > 0 || fishTotal > 0 || eggTotal > 0)
+            int honeyTotal = HoneyBasket * HoneySellPrice;
+            HoneyBasket = 0;
+            int all = total + fishTotal + eggTotal + honeyTotal;
+            if (all > 0)
             {
-                Money += total + fishTotal + eggTotal;
-                Announce($"Sold the basket for {total + fishTotal + eggTotal} coins! Meow~");
-                Quests?.OnSell(total + fishTotal + eggTotal);
+                Money += all;
+                TotalEarned += all;
+                Announce($"Sold the basket for {all} coins! Meow~");
+                Quests?.OnSell(all);
                 Audio.Play(AudioService.Sfx.Coin);
                 OnMoneyChanged?.Invoke();
                 OnBasketChanged?.Invoke();
             }
-            return total + fishTotal + eggTotal;
+            return all;
+        }
+
+        public void EatHoney()
+        {
+            if (HoneyBasket <= 0) return;
+            HoneyBasket--;
+            AddEnergy(HoneyEnergy);
+            Audio.Play(AudioService.Sfx.Pop);
+            Announce("Sweet honey! +energy~");
+            OnBasketChanged?.Invoke();
         }
 
         public void EatEgg()
@@ -453,9 +475,33 @@ namespace MochiMeadows.Game
                 if (laid > 0)
                 {
                     EggBasket += laid;
+                    CollectedEgg = true;
                     Quests?.OnEgg(laid);
                     Announce($"The chickens laid {laid} egg{(laid > 1 ? "s" : "")}! They love your pets~");
                 }
+            }
+            int honey = 0;
+            for (int i = 0; i < DecorCount; i++)
+            {
+                if (DecorType[i] != 4) continue; // beehive
+                bool hasFlower = false;
+                for (int j = 0; j < DecorCount; j++)
+                {
+                    if (DecorType[j] != 1) continue; // flower
+                    if (Mathf.Abs(DecorX[i] - DecorX[j]) <= 3 && Mathf.Abs(DecorY[i] - DecorY[j]) <= 3)
+                    {
+                        hasFlower = true;
+                        break;
+                    }
+                }
+                if (hasFlower) honey++;
+            }
+            if (honey > 0)
+            {
+                HoneyBasket += honey;
+                CollectedHoney = true;
+                Quests?.OnHoney(honey);
+                Announce($"The bees made {honey} jar{(honey > 1 ? "s" : "")} of honey! (flowers nearby help)");
             }
             if (Quests != null) Quests.NewDay();
             if (Day % 7 == 1) Announce($"A new season begins... {SeasonName}!");
@@ -509,6 +555,11 @@ namespace MochiMeadows.Game
             System.Array.Clear(Basket, 0, Basket.Length);
             System.Array.Clear(FishBasket, 0, FishBasket.Length);
             EggBasket = 0;
+            HoneyBasket = 0;
+            CollectedCropsMask = 0;
+            CollectedFishMask = 0;
+            CollectedEgg = CollectedHoney = false;
+            TotalEarned = 0;
             System.Array.Clear(DecorInventory, 0, DecorInventory.Length);
             DecorPlacing = -1;
             DecorCount = 0;
@@ -544,6 +595,12 @@ namespace MochiMeadows.Game
             for (int i = 0; i < FishBasket.Length; i++)
                 FishBasket[i] = i < data.fishBasket.Length ? data.fishBasket[i] : 0;
             EggBasket = data.eggBasket;
+            HoneyBasket = data.honeyBasket;
+            CollectedCropsMask = data.collectedCropsMask;
+            CollectedFishMask = data.collectedFishMask;
+            CollectedEgg = data.collectedEgg;
+            CollectedHoney = data.collectedHoney;
+            TotalEarned = data.totalEarned;
             DecorCount = Mathf.Min(data.decorCount, DecorMax);
             for (int i = 0; i < DecorCount; i++)
             {
@@ -583,6 +640,7 @@ namespace MochiMeadows.Game
                         stage = data.plotStage[i],
                         wateredDays = data.plotWateredDays[i],
                         wateredToday = data.plotWatered[i],
+                        regrows = i < data.plotRegrows.Length ? data.plotRegrows[i] : 0,
                     };
                     Farm.ImportPlot(x, y, pd);
                 }

@@ -55,6 +55,17 @@ Design doc: [docs/DESIGN.md](docs/DESIGN.md)
 - **Game feel**: tool swings arc across the tile, soft footsteps, splash on
   cast, dawn birdsong, whoosh on tools.
 
+## Multi-harvest, beehives & scrapbook
+
+- **Multi-harvest crops**: strawberries regrow once, blueberries twice — the
+  plant stays and blooms again instead of dying after the first harvest.
+- **Beehives** (decor): place one near flowers and the bees make honey jars
+  each morning — sell them or eat them for +15 energy.
+- **Scrapbook** (in Mochi's shop): tracks every crop, fish, and delicacy you
+  discover, plus lifetime coins earned and days on the farm.
+- **Mobile UI**: a thumb-friendly Act button and a persistent joystick pad on
+  phones; bigger touch targets.
+
 ## Seasons & critters
 
 - Each season lasts 7 days (28-day year). The world shifts with the season:

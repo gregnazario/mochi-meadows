@@ -12,6 +12,7 @@ namespace MochiMeadows.Core
     // Builds the entire game at runtime from a single empty scene.
     public class GameBootstrap : MonoBehaviour
     {
+        static bool iosShotMode;
         public const int WorldW = 40;   // tiles
         public const int WorldH = 24;
         public static readonly RectInt PondRect = new RectInt(27, 15, 3, 2);
@@ -49,6 +50,14 @@ namespace MochiMeadows.Core
             bool shotMode = false;
             foreach (var a in cmdArgs)
                 if (a.StartsWith("-screenshot")) { shotMode = true; break; }
+            // iOS: launch args don't reach Unity, so the simulator sets a user default instead
+            if (!shotMode && PlayerPrefs.GetInt("mochi_dev_shot", 0) == 1)
+            {
+                shotMode = true;
+                iosShotMode = true;
+                PlayerPrefs.DeleteKey("mochi_dev_shot");
+                PlayerPrefs.Save();
+            }
             if (shotMode)
             {
                 StartCoroutine(ScreenshotRoutine());
@@ -125,6 +134,18 @@ namespace MochiMeadows.Core
         {
             var args = System.Environment.GetCommandLineArgs();
             Debug.Log("[SHOT] mode start");
+            if (args.Contains("-screenshot-scrapbook"))
+            {
+                yield return null;
+                yield return null;
+                GameManager.I.Ui.StartGame(false);
+                GameManager.I.CollectedCropsMask = 0b111111;
+                GameManager.I.CollectedFishMask = 0b111;
+                GameManager.I.CollectedEgg = true;
+                GameManager.I.CollectedHoney = true;
+                GameManager.I.TotalEarned = 1234;
+                GameManager.I.Ui.OpenScrapbook();
+            }
             if (args.Contains("-screenshot-makeover") || args.Contains("-screenshot-fish") || args.Contains("-screenshot-rain"))
             {
                 yield return null;
@@ -142,7 +163,7 @@ namespace MochiMeadows.Core
                 if (args.Contains("-screenshot-quest")) GameManager.I.Ui.OpenQuests();
                 else GameManager.I.Ui.OpenMenu();
             }
-            if (args.Contains("-screenshot-game") || args.Contains("-screenshot-shop"))
+            if (args.Contains("-screenshot-game") || args.Contains("-screenshot-shop") || iosShotMode)
             {
                 yield return null;
                 yield return null;
@@ -177,13 +198,14 @@ namespace MochiMeadows.Core
                 }
             }
             Debug.Log("[SHOT] waiting");
-            yield return new WaitForSeconds(3.0f);
+            yield return new WaitForSeconds(4.0f);
             string dir = System.IO.Path.Combine(Application.persistentDataPath, "Screenshots");
             System.IO.Directory.CreateDirectory(dir);
             string path = System.IO.Path.Combine(dir, $"shot_{System.DateTime.Now:HHmmss}.png");
             Debug.Log("[SHOT] capturing");
-            ScreenCapture.CaptureScreenshot(path);
-            yield return new WaitForSeconds(1.0f);
+            try { ScreenCapture.CaptureScreenshot(path); }
+            catch (System.Exception e) { Debug.Log("[SHOT] capture failed: " + e.Message); }
+            yield return new WaitForSeconds(2.0f);   // let the PNG flush before quitting
             Debug.Log($"Screenshot saved to {path}");
 #if !UNITY_WEBGL
             Application.Quit();

@@ -4,7 +4,7 @@ using MochiMeadows.Audio;
 
 namespace MochiMeadows.Game
 {
-    public enum QuestType { Water = 0, Harvest = 1, Hoe = 2, Plant = 3, Pet = 4, Sell = 5, Buy = 6, Fish = 7, Egg = 8, Cook = 9 }
+    public enum QuestType { Water = 0, Harvest = 1, Hoe = 2, Plant = 3, Pet = 4, Sell = 5, Buy = 6, Fish = 7, Egg = 8, Cook = 9, Honey = 10 }
 
     public class FishDef
     {
@@ -40,7 +40,7 @@ namespace MochiMeadows.Game
         public QuestDef[] Today = new QuestDef[3];
         public Vector3 BoardPos;
 
-        int water, harvest, hoe, plant, pet, sellValue, buy, fish, egg, cook;
+        int water, harvest, hoe, plant, pet, sellValue, buy, fish, egg, cook, honey;
 
         public int[] ClaimedToday = new int[3];
 
@@ -50,7 +50,7 @@ namespace MochiMeadows.Game
         {
             for (int i = 0; i < 3; i++)
             {
-                water = harvest = hoe = plant = pet = sellValue = buy = fish = egg = cook = 0;
+                water = harvest = hoe = plant = pet = sellValue = buy = fish = egg = cook = honey = 0;
                 Today[i] = Generate();
             }
             Array.Clear(ClaimedToday, 0, ClaimedToday.Length);
@@ -59,7 +59,7 @@ namespace MochiMeadows.Game
         QuestDef Generate()
         {
             var rnd = new System.Random();
-            int roll = rnd.Next(0, 12);
+            int roll = rnd.Next(0, 13);
             switch (roll)
             {
                 case 0:
@@ -74,6 +74,7 @@ namespace MochiMeadows.Game
                 case 9: return new QuestDef { Type = QuestType.Fish, Title = "Catch a fish in the pond", Target = 1, Reward = 30 };
                 case 10: return new QuestDef { Type = QuestType.Egg, Title = "Pet chickens so they lay eggs", Target = 1, Reward = 25 };
                 case 11: return new QuestDef { Type = QuestType.Cook, Title = "Cook a cozy snack", Target = 1, Reward = 35 };
+                case 12: return new QuestDef { Type = QuestType.Honey, Title = "Collect honey from the bees", Target = 1, Reward = 30 };
                 default: return new QuestDef { Type = QuestType.Buy, Title = "Buy seed packets", Target = 2, Reward = 25 };
             }
         }
@@ -92,6 +93,7 @@ namespace MochiMeadows.Game
                 case QuestType.Fish: fish += amount; break;
                 case QuestType.Egg: egg += amount; break;
                 case QuestType.Cook: cook += amount; break;
+                case QuestType.Honey: honey += amount; break;
             }
             for (int i = 0; i < Today.Length; i++)
             {
@@ -117,6 +119,7 @@ namespace MochiMeadows.Game
                 case QuestType.Fish: return fish;
                 case QuestType.Egg: return egg;
                 case QuestType.Cook: return cook;
+                case QuestType.Honey: return honey;
             }
             return 0;
         }
@@ -144,6 +147,7 @@ namespace MochiMeadows.Game
         public void OnFish(int n = 1) => Tick(QuestType.Fish, n);
         public void OnEgg(int n = 1) => Tick(QuestType.Egg, n);
         public void OnCook(int n = 1) => Tick(QuestType.Cook, n);
+        public void OnHoney(int n = 1) => Tick(QuestType.Honey, n);
 
         public int RemainingRewards()
         {

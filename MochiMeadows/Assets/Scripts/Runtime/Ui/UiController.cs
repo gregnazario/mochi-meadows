@@ -41,6 +41,9 @@ namespace MochiMeadows.Ui
         GameObject decorPanel;
         RectTransform decorList;
         List<GameObject> decorRows = new List<GameObject>();
+        GameObject scrapPanel;
+        RectTransform scrapList;
+        List<GameObject> scrapRows = new List<GameObject>();
         RectTransform fishZone, fishCursor;
         Image fishZoneImg;
         Text fishTimer;
@@ -101,6 +104,7 @@ namespace MochiMeadows.Ui
             BuildFishing();
             BuildCooking();
             BuildDecor();
+            BuildScrapbook();
             BuildTitle();
             BuildMenu();
 
@@ -367,13 +371,48 @@ hudRoot = new GameObject("Hud");
 
         void BuildJoystick()
         {
+            bool mobile = Application.isMobilePlatform;
+            float baseSize = mobile ? 240f : 180f;
+            float knobSize = mobile ? 120f : 90f;
+
             joystickBase = CreateImage(Root, "JoystickBase", SpriteFactory.SoftCircle(64, Color.white), new Color(1, 1, 1, 0.18f));
-            joystickBase.rectTransform.sizeDelta = new Vector2(180, 180);
+            joystickBase.rectTransform.sizeDelta = new Vector2(baseSize, baseSize);
             joystickBase.gameObject.SetActive(false);
 
             joystickKnob = CreateImage(joystickBase.transform, "JoystickKnob", SpriteFactory.SoftCircle(48, Color.white), new Color(1, 1, 1, 0.35f));
-            joystickKnob.rectTransform.sizeDelta = new Vector2(90, 90);
+            joystickKnob.rectTransform.sizeDelta = new Vector2(knobSize, knobSize);
             joystickKnob.rectTransform.anchoredPosition = Vector2.zero;
+
+            if (mobile)
+            {
+                // idle pad hint so players see the control exists
+                var hint = CreateImage(Root, "JoystickHint", SpriteFactory.SoftCircle(64, Color.white), new Color(1, 1, 1, 0.10f));
+                hint.rectTransform.anchorMin = new Vector2(0, 0);
+                hint.rectTransform.anchorMax = new Vector2(0, 0);
+                hint.rectTransform.pivot = new Vector2(0, 0);
+                hint.rectTransform.anchoredPosition = new Vector2(40, 40);
+                hint.rectTransform.sizeDelta = new Vector2(baseSize, baseSize);
+                hint.raycastTarget = false;
+
+                // thumb-friendly Act button
+                var actBtn = CreateButton(Root, "ActButton", "Act", 26, Color.white, out var actBg);
+                Rt(actBtn).anchorMin = new Vector2(1, 0);
+                Rt(actBtn).anchorMax = new Vector2(1, 0);
+                Rt(actBtn).pivot = new Vector2(1, 0);
+                Rt(actBtn).anchoredPosition = new Vector2(-46, 52);
+                Rt(actBtn).sizeDelta = new Vector2(150, 150);
+                actBg.sprite = SpriteFactory.SoftCircle(64, Color.white);
+                actBg.color = new Color(0.85f, 0.65f, 0.75f, 0.55f);
+                var actLabel = actBtn.GetComponentInChildren<Text>();
+                actLabel.alignment = TextAnchor.MiddleCenter;
+                actLabel.rectTransform.offsetMin = new Vector2(0, -14);
+                actLabel.rectTransform.offsetMax = new Vector2(0, 14);
+                actBtn.onClick.AddListener(() =>
+                {
+                    var input = InputService.I;
+                    if (input != null) input.ActPressed = true;
+                });
+            }
         }
 
         void Update()
@@ -574,6 +613,17 @@ shopPanel = new GameObject("ShopPanel");
             shopCoins.rectTransform.sizeDelta = new Vector2(240, 40);
             shopCoins.alignment = TextAnchor.MiddleRight;
 
+            var scrapBtn = CreateButton(panel.transform, "Scrapbook", "📖 Scrapbook", 20, Color.white, out var scrapBtnBg);
+            Rt(scrapBtn).anchorMin = new Vector2(0.5f, 1);
+            Rt(scrapBtn).anchorMax = new Vector2(0.5f, 1);
+            Rt(scrapBtn).pivot = new Vector2(0.5f, 1);
+            Rt(scrapBtn).anchoredPosition = new Vector2(-95, -104);
+            Rt(scrapBtn).sizeDelta = new Vector2(170, 44);
+            scrapBtnBg.color = new Color(0.9f, 0.82f, 0.7f, 1);
+            scrapBtnBg.sprite = RoundedSprite(Palette.Peach);
+            scrapBtnBg.type = Image.Type.Sliced;
+            scrapBtn.onClick.AddListener(() => OpenScrapbook());
+
             var makeoverBtn = CreateButton(panel.transform, "Makeover", "✨ Makeover", 22, Color.white, out var makeoverBtnBg);
             Rt(makeoverBtn).anchorMin = new Vector2(0.5f, 1);
             Rt(makeoverBtn).anchorMax = new Vector2(0.5f, 1);
@@ -664,7 +714,7 @@ shopPanel = new GameObject("ShopPanel");
             decorHeader.alignment = TextAnchor.MiddleCenter;
             y -= 46;
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 5; i++)
             {
                 var row = CreateImage(panel.transform, "DecorRow" + i, RoundedSprite(Palette.White), new Color(1, 1, 1, 0.7f));
                 row.rectTransform.anchorMin = new Vector2(0.5f, 1);
@@ -1013,8 +1063,75 @@ shopPanel = new GameObject("ShopPanel");
                 shopRows.Add(row.gameObject);
             }
 
+            // honey row
+            if (GameManager.I.HoneyBasket > 0)
+            {
+                var row = CreateImage(basketList, "HoneyRow", RoundedSprite(Palette.White), new Color(1, 1, 1, 0.7f));
+                row.rectTransform.anchorMin = new Vector2(0.5f, 1);
+                row.rectTransform.anchorMax = new Vector2(0.5f, 1);
+                row.rectTransform.pivot = new Vector2(0.5f, 1);
+                row.rectTransform.anchoredPosition = new Vector2(0, fy);
+                row.rectTransform.sizeDelta = new Vector2(600, 60);
+                row.type = Image.Type.Sliced;
+
+                var icon = CreateImage(row.transform, "Icon", SpriteBank.Honey, Color.white);
+                icon.rectTransform.anchorMin = new Vector2(0, 0);
+                icon.rectTransform.anchorMax = new Vector2(0, 1);
+                icon.rectTransform.sizeDelta = new Vector2(52, 52);
+                icon.rectTransform.anchoredPosition = new Vector2(30, 0);
+                icon.preserveAspect = true;
+
+                var name = CreateText(row.transform, "Name", $"Honey x{GameManager.I.HoneyBasket}", 24, Palette.Chocolate);
+                name.rectTransform.anchorMin = new Vector2(0, 0);
+                name.rectTransform.anchorMax = new Vector2(1, 1);
+                name.rectTransform.offsetMin = new Vector2(64, 0);
+                name.rectTransform.offsetMax = new Vector2(-320, 0);
+                name.alignment = TextAnchor.MiddleLeft;
+
+                var price = CreateText(row.transform, "Price", (GameManager.I.HoneyBasket * GameManager.HoneySellPrice) + " coins", 22, Palette.Chocolate);
+                price.rectTransform.anchorMin = new Vector2(0, 0);
+                price.rectTransform.anchorMax = new Vector2(1, 1);
+                price.rectTransform.offsetMin = new Vector2(-315, 0);
+                price.rectTransform.offsetMax = new Vector2(-250, 0);
+                price.alignment = TextAnchor.MiddleLeft;
+
+                var eat = CreateButton(row.transform, "Eat", "Eat", 20, Color.white, out var eatBg2);
+                Rt(eat).anchorMin = new Vector2(1, 0);
+                Rt(eat).anchorMax = new Vector2(1, 1);
+                Rt(eat).pivot = new Vector2(1, 0.5f);
+                Rt(eat).anchoredPosition = new Vector2(-100, 0);
+                Rt(eat).sizeDelta = new Vector2(80, 42);
+                eatBg2.color = new Color(0.95f, 0.85f, 0.7f, 1);
+                eatBg2.sprite = RoundedSprite(Palette.Peach);
+                eatBg2.type = Image.Type.Sliced;
+                eat.onClick.AddListener(() => { GameManager.I.EatHoney(); RefreshShop(); });
+
+                var sell = CreateButton(row.transform, "Sell", "Sell", 22, Color.white, out var sellBg3);
+                Rt(sell).anchorMin = new Vector2(1, 0);
+                Rt(sell).anchorMax = new Vector2(1, 1);
+                Rt(sell).pivot = new Vector2(1, 0.5f);
+                Rt(sell).anchoredPosition = new Vector2(-10, 0);
+                Rt(sell).sizeDelta = new Vector2(90, 42);
+                sellBg3.color = new Color(0.9f, 0.75f, 0.6f, 1);
+                sellBg3.sprite = RoundedSprite(Palette.Peach);
+                sellBg3.type = Image.Type.Sliced;
+                sell.onClick.AddListener(() =>
+                {
+                    var gm = GameManager.I;
+                    int value = gm.HoneyBasket * GameManager.HoneySellPrice;
+                    gm.HoneyBasket = 0;
+                    gm.Money += value;
+                    gm.Announce($"Sold honey for {value} coins!");
+                    gm.Audio.Play(AudioService.Sfx.Coin);
+                    gm.OnMoneyChanged?.Invoke();
+                    gm.OnBasketChanged?.Invoke();
+                    RefreshShop();
+                });
+                shopRows.Add(row.gameObject);
+            }
+
             // hide basket list if empty
-            basketList.gameObject.SetActive(GameManager.I.BasketTotalValue() > 0 || GameManager.I.FishBasketTotalValue() > 0 || GameManager.I.EggBasket > 0);
+            basketList.gameObject.SetActive(GameManager.I.BasketTotalValue() > 0 || GameManager.I.FishBasketTotalValue() > 0 || GameManager.I.EggBasket > 0 || GameManager.I.HoneyBasket > 0);
         }
 
         public void OpenShop(NpcController mochi)
@@ -1492,6 +1609,160 @@ shopPanel = new GameObject("ShopPanel");
         {
             if (decorList == null) return;
             BuildDecorRows();
+        }
+
+        void BuildScrapbook()
+        {
+            scrapPanel = new GameObject("ScrapPanel");
+            scrapPanel.transform.SetParent(Root, false);
+            var sRt = scrapPanel.AddComponent<RectTransform>();
+            sRt.anchorMin = Vector2.zero; sRt.anchorMax = Vector2.one;
+            sRt.offsetMin = Vector2.zero; sRt.offsetMax = Vector2.zero;
+
+            var backdrop = CreateImage(scrapPanel.transform, "Backdrop", null, new Color(0.15f, 0.12f, 0.3f, 0.55f));
+            backdrop.rectTransform.anchorMin = Vector2.zero;
+            backdrop.rectTransform.anchorMax = Vector2.one;
+            backdrop.rectTransform.offsetMin = Vector2.zero;
+            backdrop.rectTransform.offsetMax = Vector2.zero;
+            backdrop.rectTransform.SetAsFirstSibling();
+
+            var panel = CreateImage(scrapPanel.transform, "Panel", RoundedSprite(Palette.Cream), Color.white);
+            panel.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            panel.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            panel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            panel.rectTransform.sizeDelta = new Vector2(640, 720);
+            panel.type = Image.Type.Sliced;
+
+            var title = CreateText(panel.transform, "Title", "Mochi's Scrapbook", 36, Palette.Chocolate);
+            AddOutline(title, 1f, new Color(0.36f, 0.28f, 0.40f, 0.5f));
+            title.rectTransform.anchorMin = new Vector2(0.5f, 1);
+            title.rectTransform.anchorMax = new Vector2(0.5f, 1);
+            title.rectTransform.pivot = new Vector2(0.5f, 1);
+            title.rectTransform.anchoredPosition = new Vector2(0, -22);
+            title.rectTransform.sizeDelta = new Vector2(500, 46);
+            title.alignment = TextAnchor.MiddleCenter;
+
+            scrapList = new GameObject("ScrapList").AddComponent<RectTransform>();
+            scrapList.SetParent(panel.transform, false);
+            scrapList.anchorMin = new Vector2(0.5f, 1);
+            scrapList.anchorMax = new Vector2(0.5f, 1);
+            scrapList.pivot = new Vector2(0.5f, 1);
+            scrapList.anchoredPosition = new Vector2(0, -80);
+            scrapList.sizeDelta = new Vector2(580, 620);
+
+            var closeBtn = CreateButton(panel.transform, "Close", "✕", 30, Color.white, out var closeBg);
+            Rt(closeBtn).anchorMin = new Vector2(1, 1);
+            Rt(closeBtn).anchorMax = new Vector2(1, 1);
+            Rt(closeBtn).pivot = new Vector2(1, 1);
+            Rt(closeBtn).anchoredPosition = new Vector2(-14, -14);
+            Rt(closeBtn).sizeDelta = new Vector2(52, 52);
+            closeBg.color = new Color(0.9f, 0.6f, 0.65f, 1);
+            closeBg.sprite = RoundedSprite(Palette.Blush);
+            closeBg.type = Image.Type.Sliced;
+            closeBtn.onClick.AddListener(() => scrapPanel.SetActive(false));
+
+            scrapPanel.SetActive(false);
+        }
+
+        void BuildScrapRows()
+        {
+            foreach (var r in scrapRows) Destroy(r);
+            scrapRows.Clear();
+            var gm = GameManager.I;
+            if (gm == null) return;
+            float y = 0;
+
+            AddScrapHeader("Crops", ref y);
+            for (int i = 0; i < 6; i++)
+            {
+                bool got = (gm.CollectedCropsMask & (1 << i)) != 0;
+                AddScrapRow(SpriteBank.CropSprites[i, 3], CropDef.All[i].Name, got, ref y);
+            }
+            AddScrapHeader("Fish", ref y);
+            for (int i = 0; i < 3; i++)
+            {
+                bool got = (gm.CollectedFishMask & (1 << i)) != 0;
+                AddScrapRow(i == 0 ? SpriteBank.Goldfish : i == 1 ? SpriteBank.BubbleFish : SpriteBank.SakuraFish, FishDef.All[i].Name, got, ref y);
+            }
+            AddScrapHeader("Delicacies", ref y);
+            AddScrapRow(SpriteBank.Egg, "Eggs", gm.CollectedEgg, ref y);
+            AddScrapRow(SpriteBank.Honey, "Honey", gm.CollectedHoney, ref y);
+
+            AddScrapHeader("Memories", ref y);
+            int collected = CountBits(gm.CollectedCropsMask) + CountBits(gm.CollectedFishMask) + (gm.CollectedEgg ? 1 : 0) + (gm.CollectedHoney ? 1 : 0);
+            AddScrapRow(null, $"Collected {collected} of 12", false, ref y, countAsText: $"{collected}/12");
+            AddScrapRow(null, "Coins earned in total", false, ref y, countAsText: gm.TotalEarned.ToString());
+            AddScrapRow(null, "Days on the farm", false, ref y, countAsText: gm.Day.ToString());
+        }
+
+        static int CountBits(int mask)
+        {
+            int n = 0;
+            while (mask != 0) { n += mask & 1; mask >>= 1; }
+            return n;
+        }
+
+        void AddScrapHeader(string text, ref float y)
+        {
+            var h = CreateText(scrapList, "H" + text, "~ " + text + " ~", 22, Palette.DeepPink);
+            h.rectTransform.anchorMin = new Vector2(0.5f, 1);
+            h.rectTransform.anchorMax = new Vector2(0.5f, 1);
+            h.rectTransform.pivot = new Vector2(0.5f, 1);
+            h.rectTransform.anchoredPosition = new Vector2(0, y);
+            h.rectTransform.sizeDelta = new Vector2(500, 30);
+            h.alignment = TextAnchor.MiddleCenter;
+            scrapRows.Add(h.gameObject);
+            y -= 34;
+        }
+
+        void AddScrapRow(Sprite icon, string name, bool got, ref float y, string countAsText = "")
+        {
+            var row = CreateImage(scrapList, "ScrapRow" + name, RoundedSprite(Palette.White), new Color(1, 1, 1, 0.7f));
+            row.rectTransform.anchorMin = new Vector2(0.5f, 1);
+            row.rectTransform.anchorMax = new Vector2(0.5f, 1);
+            row.rectTransform.pivot = new Vector2(0.5f, 1);
+            row.rectTransform.anchoredPosition = new Vector2(0, y);
+            row.rectTransform.sizeDelta = new Vector2(520, 48);
+            row.type = Image.Type.Sliced;
+
+            if (icon != null)
+            {
+                var ic = CreateImage(row.transform, "Icon", icon, Color.white);
+                ic.rectTransform.anchorMin = new Vector2(0, 0);
+                ic.rectTransform.anchorMax = new Vector2(0, 1);
+                ic.rectTransform.sizeDelta = new Vector2(42, 42);
+                ic.rectTransform.anchoredPosition = new Vector2(24, 0);
+                ic.preserveAspect = true;
+                ic.color = got ? Color.white : new Color(0.4f, 0.35f, 0.45f, 0.35f);
+            }
+
+            var nameText = CreateText(row.transform, "Name", got ? name : "???", 22, got ? Palette.Chocolate : new Color(0.5f, 0.45f, 0.55f, 0.8f));
+            nameText.rectTransform.anchorMin = new Vector2(0, 0);
+            nameText.rectTransform.anchorMax = new Vector2(1, 1);
+            nameText.rectTransform.offsetMin = new Vector2(52, 0);
+            nameText.rectTransform.offsetMax = new Vector2(-120, 0);
+            nameText.alignment = TextAnchor.MiddleLeft;
+
+            var mark = CreateText(row.transform, "Mark", got ? "✓" : "?", 24, got ? Palette.LeafDark : new Color(0.5f, 0.45f, 0.55f, 0.8f));
+            mark.rectTransform.anchorMin = new Vector2(1, 0);
+            mark.rectTransform.anchorMax = new Vector2(1, 1);
+            mark.rectTransform.offsetMin = new Vector2(-110, 0);
+            mark.rectTransform.offsetMax = new Vector2(-20, 0);
+            mark.alignment = TextAnchor.MiddleRight;
+
+            if (countAsText != "")
+            {
+                mark.text = countAsText;
+                mark.fontSize = 18;
+            }
+            scrapRows.Add(row.gameObject);
+            y -= 54;
+        }
+
+        public void OpenScrapbook()
+        {
+            BuildScrapRows();
+            scrapPanel.SetActive(true);
         }
 
         void BuildMakeover()

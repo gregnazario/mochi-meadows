@@ -18,6 +18,7 @@ namespace MochiMeadows.Game
         public int SellPrice;
         public int GrowthDays;          // watered days to reach ready
         public int MinYield, MaxYield;  // harvest amount
+        public int Regrow;              // >0: keeps producing this many extra harvests
         public Season Season;           // in-season bonus season
         public Color Tint;
 
@@ -31,9 +32,9 @@ namespace MochiMeadows.Game
         public static readonly CropDef[] All =
         {
             new CropDef { Id = CropId.Strawberry, Name = "Strawberry", SeedName = "Strawberry Seeds", Yum = "Sweet strawberry! +sparkle+",
-                          SeedPrice = 10, SellPrice = 20, GrowthDays = 2, MinYield = 1, MaxYield = 2, Season = Season.Spring, Tint = Palette.DeepPink },
+                          SeedPrice = 10, SellPrice = 20, GrowthDays = 2, MinYield = 1, MaxYield = 2, Regrow = 1, Season = Season.Spring, Tint = Palette.DeepPink },
             new CropDef { Id = CropId.Blueberry, Name = "Blueberry", SeedName = "Blueberry Seeds", Yum = "Baby-blue berry!",
-                          SeedPrice = 15, SellPrice = 30, GrowthDays = 3, MinYield = 1, MaxYield = 3, Season = Season.Summer, Tint = Palette.BabyBlue },
+                          SeedPrice = 15, SellPrice = 30, GrowthDays = 3, MinYield = 1, MaxYield = 3, Regrow = 2, Season = Season.Summer, Tint = Palette.BabyBlue },
             new CropDef { Id = CropId.Pumpkitten, Name = "Pumpkitten", SeedName = "Pumpkitten Seeds", Yum = "It purrs!  Meow~",
                           SeedPrice = 25, SellPrice = 60, GrowthDays = 3, MinYield = 1, MaxYield = 2, Season = Season.Autumn, Tint = Palette.Orange },
             new CropDef { Id = CropId.Sakura, Name = "Sakura Turnip", SeedName = "Sakura Seeds", Yum = "Blossom-fresh!",
@@ -57,6 +58,7 @@ namespace MochiMeadows.Game
         public int stage;      // 0..3 (3 = ready)
         public int wateredDays;
         public bool wateredToday;
+        public int regrows;    // extra harvests left (multi-harvest crops)
     }
 
     // The farm plot grid: hoe, plant, water, grow, harvest.
@@ -227,6 +229,7 @@ namespace MochiMeadows.Game
                 stage = 0,
                 wateredDays = 0,
                 wateredToday = p.wateredToday,
+                regrows = CropDef.Get(crop).Regrow,
             };
             SetTileVisual(x, y);
             QuestManager.I?.OnPlant();
@@ -234,7 +237,7 @@ namespace MochiMeadows.Game
         }
 
         // Direct planting for onboarding / save load (no cost).
-        public void PlantFree(int x, int y, CropId crop, int stage = 0, int wateredDays = 0, bool watered = false)
+        public void PlantFree(int x, int y, CropId crop, int stage = 0, int wateredDays = 0, bool watered = false, int regrows = -1)
         {
             if (!InBounds(x, y)) return;
             plots[x, y] = new PlotData
@@ -244,6 +247,7 @@ namespace MochiMeadows.Game
                 stage = stage,
                 wateredDays = wateredDays,
                 wateredToday = watered,
+                regrows = regrows >= 0 ? regrows : CropDef.Get(crop).Regrow,
             };
             SetTileVisual(x, y);
         }
@@ -258,10 +262,27 @@ namespace MochiMeadows.Game
 
             int yield = UnityEngine.Random.Range(def.MinYield, def.MaxYield + 1);
             gm.AddToBasket((CropId)p.cropId, yield);
-            plots[x, y] = new PlotData { state = TileState.Watered, cropId = -1 };
+            if (p.regrows > 0)
+            {
+                // the plant keeps producing: back to a flowering stage
+                plots[x, y] = new PlotData
+                {
+                    state = TileState.Cropped,
+                    cropId = p.cropId,
+                    stage = 2,
+                    wateredDays = Mathf.Max(1, def.GrowthDays - 1),
+                    wateredToday = false,
+                    regrows = p.regrows - 1,
+                };
+                gm.Announce($"Yay! {yield} {def.Name}(s)! The plant will bloom again~");
+            }
+            else
+            {
+                plots[x, y] = new PlotData { state = TileState.Watered, cropId = -1 };
+                gm.Announce($"Yay! {yield} {def.Name}(s) to your basket! {def.Yum}");
+            }
             SetTileVisual(x, y);
             gm.AddEnergy(GameManager.RewardHarvest);
-            gm.Announce($"Yay! {yield} {def.Name}(s) to your basket! {def.Yum}");
             QuestManager.I?.OnHarvest();
             return ActionResult.Ok;
         }

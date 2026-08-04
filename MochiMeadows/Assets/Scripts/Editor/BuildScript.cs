@@ -19,6 +19,9 @@ namespace MochiMeadows.EditorTools
         [MenuItem("Tools/Mochi Meadows/Build WebGL")]
         public static void BuildWebGL() => Build(WebGLPath, BuildTarget.WebGL, BuildTargetGroup.WebGL);
 
+        [MenuItem("Tools/Mochi Meadows/Build Android APK")]
+        public static void BuildAndroid() => Build("Builds/Android/MochiMeadows.apk", BuildTarget.Android, BuildTargetGroup.Android);
+
         [MenuItem("Tools/Mochi Meadows/Build iOS (Xcode project)")]
         public static void BuildiOS() => Build("Builds/iOS", BuildTarget.iOS, BuildTargetGroup.iOS);
 

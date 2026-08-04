@@ -75,7 +75,7 @@ namespace MochiMeadows.Game
 
             // --- actions ---
             actionCooldown -= Time.deltaTime;
-            bool wantAct = (input.ActionPressed || (input.ActionHeld && actionCooldown <= -0.15f));
+            bool wantAct = (input.ActionPressed || input.ActPressed || (input.ActionHeld && actionCooldown <= -0.15f));
             Vector2Int target = FacingTile;
 
             // Touch tap overrides target tile
