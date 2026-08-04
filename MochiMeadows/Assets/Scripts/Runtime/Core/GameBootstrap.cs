@@ -13,24 +13,51 @@ namespace MochiMeadows.Core
     public class GameBootstrap : MonoBehaviour
     {
         static bool iosShotMode;
-        public const int WorldW = 40;   // tiles
-        public const int WorldH = 24;
-        public static readonly RectInt PondRect = new RectInt(27, 15, 3, 2);
-        public static readonly Vector3 KitchenPos = new Vector3(28.5f, 5.5f, 0);
+        public static int WorldW => LevelConfig.Current.world.width;
+        public static int WorldH => LevelConfig.Current.world.height;
+        public static RectInt PondRect
+        {
+            get
+            {
+                var p = LevelConfig.Current.pond;
+                return new RectInt(p.x, p.y, p.w, p.h);
+            }
+        }
+        public static Vector3 KitchenPos
+        {
+            get
+            {
+                var k = LevelConfig.Current.spots.kitchen;
+                return new Vector3(k[0] + 0.5f, k[1] + 0.5f, 0);
+            }
+        }
 
         public static bool IsDecorSpotFree(int wx, int wy)
         {
             if (wx < 1 || wy < 1 || wx > WorldW - 2 || wy > WorldH - 2) return false;
-            if (wx >= 9 && wx <= 24 && wy >= 7 && wy <= 15) return false;      // farm (incl. expandable)
-            if (wx >= 27 && wx <= 29 && wy >= 15 && wy <= 16) return false;     // pond
-            if (wx == 4 && wy >= 6 && wy <= 15) return false;                   // path
-            if (wy == 6 && wx >= 4 && wx <= 9) return false;                    // path
-            if (wx == 4 && wy == 15) return false;                              // shop
-            if (wx == 6 && wy == 15) return false;                              // quest board
-            if (wx == 30 && wy == 4) return false;                              // blanket
-            if (wx == 28 && wy == 5) return false;                              // kitchen
-            if ((wx == 31 && wy == 5) || (wx == 25 && wy == 3) || (wx == 2 && wy == 3)
-                || (wx == 35 && wy == 19) || (wx == 6 && wy == 20)) return false; // trees
+            var lvl = LevelConfig.Current;
+            var f = lvl.farm;
+            if (wx >= f.originX && wx < f.originX + f.maxW && wy >= f.originY && wy < f.originY + f.maxH) return false;
+            var p = lvl.pond;
+            if (wx >= p.x && wx < p.x + p.w && wy >= p.y && wy < p.y + p.h) return false;
+            if (lvl.paths != null)
+            {
+                foreach (var path in lvl.paths)
+                {
+                    if (wx >= Mathf.Min(path.x0, path.x1) && wx <= Mathf.Max(path.x0, path.x1)
+                        && wy >= Mathf.Min(path.y0, path.y1) && wy <= Mathf.Max(path.y0, path.y1)) return false;
+                }
+            }
+            var spots = lvl.spots;
+            foreach (var spot in new[] { spots.shop, spots.questBoard, spots.blanket, spots.kitchen })
+            {
+                if (spot != null && spot.Length >= 2 && spot[0] == wx && spot[1] == wy) return false;
+            }
+            if (lvl.trees != null)
+            {
+                foreach (var t in lvl.trees)
+                    if (t.x == wx && t.y == wy) return false;
+            }
             return true;
         }
 
@@ -62,8 +89,13 @@ namespace MochiMeadows.Core
             {
                 StartCoroutine(ScreenshotRoutine());
             }
+            if (cmdArgs.Any(a => a == "-export-art") || cmdArgs.Any(a => a == "-export-level"))
+            {
+                StartCoroutine(ExportRoutine(cmdArgs.Any(a => a == "-export-art"), cmdArgs.Any(a => a == "-export-level")));
+            }
 
             SpriteBank.BuildAll();
+            LevelConfig.Load();
 
             var audio = gameObject.AddComponent<AudioService>();
             var input = gameObject.AddComponent<InputService>();
@@ -71,13 +103,34 @@ namespace MochiMeadows.Core
             gm.Audio = audio;
             gm.DevPlaytest = cmdArgs.Any(a => a == "-playtest");
 
+            StartCoroutine(InitRoutine(gm, audio));
+        }
+
+        public static bool InitComplete { get; private set; }
+
+        System.Collections.IEnumerator ExportRoutine(bool art, bool level)
+        {
+            while (!InitComplete) yield return null;
+            if (art) Art.SpriteExporter.ExportAll();
+            if (level) LevelExporter.Export();
+#if !UNITY_WEBGL
+            Application.Quit();
+#endif
+        }
+
+        System.Collections.IEnumerator InitRoutine(GameManager gm, AudioService audio)
+        {
+            // wait for any custom art (async on WebGL; instant elsewhere)
+            yield return CustomSpriteLoader.LoadAll();
+
             BuildCameras();
             var world = BuildWorld();
             var farm = BuildFarm(world, gm);
             var (player, mochi) = BuildCharacters(farm);
             var critters = BuildCritters(farm);
             var quests = gameObject.AddComponent<QuestManager>();
-            quests.BoardPos = new Vector3(6.5f, 15.5f, 0);
+            var qspot = LevelConfig.Current.spots.questBoard;
+            quests.BoardPos = new Vector3(qspot[0] + 0.5f, qspot[1] + 0.5f, 0);
             BuildQuestBoard(world, quests.BoardPos);
             var decorRootGo = new GameObject("Decor");
             decorRootGo.transform.SetParent(transform, false);
@@ -114,6 +167,7 @@ namespace MochiMeadows.Core
             {
                 gameObject.AddComponent<PlaytestSimulator>();
             }
+            InitComplete = true;
         }
 
         SpriteRenderer MakeSeasonTint()
@@ -251,7 +305,7 @@ namespace MochiMeadows.Core
             }
         }
 
-        // --- world: ground, path, pond, fence, trees, flowers ---
+        // --- world: ground, path, pond, fence, trees, flowers (level-driven) ---
         Transform BuildWorld()
         {
             var root = new GameObject("World").transform;
@@ -259,7 +313,8 @@ namespace MochiMeadows.Core
             var ground = new GameObject("Ground").transform;
             ground.SetParent(root, false);
 
-            var rand = new System.Random(20260802);
+            var lvl = LevelConfig.Current;
+            var rand = new System.Random(lvl.flowers != null ? lvl.flowers.seed : 20260802);
 
             for (int x = 0; x < WorldW; x++)
             {
@@ -270,18 +325,27 @@ namespace MochiMeadows.Core
                 }
             }
 
-            // path from farm to shop
-            for (int x = 4; x <= 9; x++) SetGround(x, 6, SpriteBank.Path0);
-            for (int y = 6; y <= 15; y++) SetGround(4, y, SpriteBank.Path0);
-            SetGround(4, 15, SpriteBank.Path0);
-
-            // pond (3x2)
-            for (int x = 27; x <= 29; x++)
-                for (int y = 15; y <= 16; y++)
+            // paths
+            if (lvl.paths != null)
+            {
+                foreach (var path in lvl.paths)
                 {
-                    var sr = MakeTile(ground, x, y, SpriteBank.WaterTile);
-                    sr.sortingOrder = -4;
+                    for (int x = path.x0; x <= path.x1; x++)
+                        for (int y = path.y0; y <= path.y1; y++)
+                            SetGround(x, y, SpriteBank.Path0);
                 }
+            }
+
+            // pond
+            if (lvl.pond != null)
+            {
+                for (int x = lvl.pond.x; x < lvl.pond.x + lvl.pond.w; x++)
+                    for (int y = lvl.pond.y; y < lvl.pond.y + lvl.pond.h; y++)
+                    {
+                        var sr = MakeTile(ground, x, y, SpriteBank.WaterTile);
+                        sr.sortingOrder = -4;
+                    }
+            }
 
             // fence perimeter
             for (int x = 0; x < WorldW; x++)
@@ -297,7 +361,8 @@ namespace MochiMeadows.Core
 
             // flowers (decor)
             int placed = 0, guard = 0;
-            while (placed < 22 && guard++ < 2000)
+            int flowerTarget = lvl.flowers != null ? lvl.flowers.count : 22;
+            while (placed < flowerTarget && guard++ < 2000)
             {
                 int x = rand.Next(1, WorldW - 1);
                 int y = rand.Next(1, WorldH - 1);
@@ -313,21 +378,20 @@ namespace MochiMeadows.Core
                 placed++;
             }
 
-            // peach tree + blanket (top-right)
-            MakeTree(root, new Vector2Int(31, 5), true);
-            var blanket = MakeTile(root, 30, 4, SpriteBank.Blanket);
+            // trees + blanket + shop + kitchen (level-driven)
+            if (lvl.trees != null)
+            {
+                foreach (var t in lvl.trees)
+                    MakeTree(root, new Vector2Int(t.x, t.y), t.peach);
+            }
+            var bspot = lvl.spots != null && lvl.spots.blanket != null ? lvl.spots.blanket : new[] { 30, 4 };
+            var blanket = MakeTile(root, bspot[0], bspot[1], SpriteBank.Blanket);
             blanket.sortingOrder = 3;
-            // extra trees
-            MakeTree(root, new Vector2Int(25, 3), false);
-            MakeTree(root, new Vector2Int(2, 3), false);
-            MakeTree(root, new Vector2Int(35, 19), false);
-            MakeTree(root, new Vector2Int(6, 20), false);
-
-            // shop stand
-            var shop = MakeTile(root, 4, 15, SpriteBank.ShopStand);
+            var sspot = lvl.spots != null && lvl.spots.shop != null ? lvl.spots.shop : new[] { 4, 15 };
+            var shop = MakeTile(root, sspot[0], sspot[1], SpriteBank.ShopStand);
             shop.sortingOrder = 3;
-            // kitchen table
-            var kitchen = MakeTile(root, 28, 5, SpriteBank.KitchenTable);
+            var kspot = lvl.spots != null && lvl.spots.kitchen != null ? lvl.spots.kitchen : new[] { 28, 5 };
+            var kitchen = MakeTile(root, kspot[0], kspot[1], SpriteBank.KitchenTable);
             kitchen.sortingOrder = 3;
             return root;
         }
@@ -517,7 +581,11 @@ namespace MochiMeadows.Core
                     cropGo.SetActive(false);
                 }
             }
-            farm.BlanketPos = new Vector3(30.5f, 4.3f, 0);
+            var lf = LevelConfig.Current.farm;
+            farm.Origin = new Vector2Int(lf.originX, lf.originY);
+            farm.ActiveW = lf.baseW;
+            farm.ActiveH = lf.baseH;
+            farm.BlanketPos = new Vector3(LevelConfig.Current.spots.blanket[0] + 0.5f, LevelConfig.Current.spots.blanket[1] + 0.3f, 0);
             farm.Init(gm, renderers, cropRoot);
             return farm;
         }
@@ -526,7 +594,7 @@ namespace MochiMeadows.Core
         {
             var playerGo = new GameObject("Player");
             playerGo.transform.SetParent(transform, false);
-            playerGo.transform.position = new Vector3(8.5f, 14.5f, -1);
+            playerGo.transform.position = new Vector3(LevelConfig.Current.playerSpawn.x, LevelConfig.Current.playerSpawn.y, -1);
             AddGroundShadow(playerGo.transform, new Vector3(0, -0.44f, 0));
             var bodyGo = new GameObject("Body");
             bodyGo.transform.SetParent(playerGo.transform, false);
@@ -571,12 +639,9 @@ namespace MochiMeadows.Core
 
         CritterController[] BuildCritters(FarmGrid farm)
         {
-            var homes = new[]
-            {
-                new Vector2(22.5f, 14.5f),
-                new Vector2(24.5f, 15.5f),
-                new Vector2(23.5f, 13.8f),
-            };
+            var homes = new Vector2[LevelConfig.Current.chickens.Length];
+            for (int i = 0; i < homes.Length; i++)
+                homes[i] = new Vector2(LevelConfig.Current.chickens[i].x, LevelConfig.Current.chickens[i].y);
             var critters = new CritterController[homes.Length];
             for (int i = 0; i < homes.Length; i++)
             {

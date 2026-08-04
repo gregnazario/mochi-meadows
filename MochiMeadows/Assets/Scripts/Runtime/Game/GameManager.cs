@@ -571,8 +571,8 @@ namespace MochiMeadows.Game
             SpriteBank.RebuildPlayerSprites(DressColors[0], HairColors[0]);
             SelectedSlot = 0;
             Hotbar = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
-            Player.TeleportTo(new Vector3(8.5f, 14.5f, -1));
-            if (Mochi != null) Mochi.transform.position = new Vector3(4.5f, 14.2f, -1);
+            Player.TeleportTo(new Vector3(Core.LevelConfig.Current.playerSpawn.x, Core.LevelConfig.Current.playerSpawn.y, -1));
+            if (Mochi != null) Mochi.transform.position = new Vector3(Core.LevelConfig.Current.mochi.home.x, Core.LevelConfig.Current.mochi.home.y, -1);
             Farm.ResetGrid();
             OnMoneyChanged?.Invoke();
             OnEnergyChanged?.Invoke();
