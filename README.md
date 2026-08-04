@@ -38,6 +38,15 @@ Design doc: [docs/DESIGN.md](docs/DESIGN.md)
    restore; the day also auto-ends at midnight.
 5. Autosaves every 45 s, at dawn, and on quit.
 
+## Menus & controls
+
+- **Pause menu** (Esc / Start / M or the ☕ button): the day genuinely pauses.
+  Resume, Save, Controls, Return to Title, and Save & quit — plus Music/SFX
+  sliders in a clear ~ Sound ~ section.
+- **Return to Title** auto-saves before heading back to the menu.
+- **Controls page** (from the pause menu or the title screen): every control
+  for desktop, touch, and gamepad, in one place.
+
 ## Quests, expansions & settings
 
 - **Quest board** (next to Mochi's stand): three cozy daily tasks — water,
