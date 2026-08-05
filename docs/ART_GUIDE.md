@@ -53,6 +53,26 @@ find bundled art.
 - If a PNG is missing or fails to parse, the original procedural sprite is
   used — the game never breaks.
 
+## Sprite sheet import
+
+Instead of individual PNGs, you can use one sheet:
+
+- `spritesheet.png` in the art folder
+- optional `spritesheet.json` mapping frame names to rectangles:
+
+```json
+{ "frames": [
+  { "name": "PlayerDown0", "x": 0,   "y": 0,   "w": 64, "h": 64 },
+  { "name": "PlayerDown1", "x": 64,  "y": 0,   "w": 64, "h": 64 }
+] }
+```
+
+- Coordinates are pixels from the **top-left** of the sheet (the loader
+  flips them for Unity). Any cell size works.
+- No JSON = a 64×64 grid is assumed, frames mapped in the manifest order.
+- Individual PNGs take precedence over the sheet, so you can mix: a sheet
+  for the bulk + a single PNG for one tweaked sprite.
+
 ## If you want to start from scratch
 
 The procedural sprites themselves are defined as ASCII pixel maps in

@@ -268,7 +268,7 @@ PlayerSettings:
   useCustomGradlePropertiesTemplate: 0
   useCustomGradleSettingsTemplate: 0
   useCustomProguardFile: 0
-  AndroidTargetArchitectures: 2
+  AndroidTargetArchitectures: 0
   AndroidSplashScreenScale: 0
   androidSplashScreen: {fileID: 0}
   AndroidKeystoreName: 
@@ -689,6 +689,7 @@ PlayerSettings:
   platformArchitecture:
     iPhone: 1
   scriptingBackend:
+    Android: 0
     Standalone: 0
     WebGL: 1
   il2cppCompilerConfiguration: {}

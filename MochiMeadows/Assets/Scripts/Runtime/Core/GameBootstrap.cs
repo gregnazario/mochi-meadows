@@ -102,6 +102,7 @@ namespace MochiMeadows.Core
             var gm = gameObject.AddComponent<GameManager>();
             gm.Audio = audio;
             gm.DevPlaytest = cmdArgs.Any(a => a == "-playtest");
+            gm.ApplyNewGameOptions();
 
             StartCoroutine(InitRoutine(gm, audio));
         }
@@ -208,6 +209,12 @@ namespace MochiMeadows.Core
                 if (args.Contains("-screenshot-makeover")) GameManager.I.Ui.OpenMakeover();
                 if (args.Contains("-screenshot-fish")) GameManager.I.Ui.OpenFishing();
                 if (args.Contains("-screenshot-rain")) WeatherController.I.ForceRain();
+            }
+            if (args.Contains("-screenshot-newgame"))
+            {
+                yield return null;
+                yield return null;
+                GameManager.I.Ui.ShowNewGame();
             }
             if (args.Contains("-screenshot-quest") || args.Contains("-screenshot-menu"))
             {

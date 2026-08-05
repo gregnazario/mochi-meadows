@@ -5,6 +5,12 @@ using System.IO;
 using System.Reflection;
 using UnityEngine;
 
+[Serializable]
+public class SheetFrame { public string name; public int x, y, w, h; }
+
+[Serializable]
+public class SheetData { public SheetFrame[] frames; }
+
 namespace MochiMeadows.Art
 {
     // Custom-art pipeline: replace any procedural sprite by dropping a PNG
@@ -43,6 +49,9 @@ namespace MochiMeadows.Art
             if (Directory.Exists(devDir))
                 files.AddRange(Directory.GetFiles(devDir, "*.png"));
 
+            // 3) sprite sheet: one PNG with many frames (see ART_GUIDE.md)
+            yield return LoadSpriteSheet(bundledDir, devDir);
+
             foreach (var f in files)
             {
                 var name = Path.GetFileNameWithoutExtension(f);
@@ -52,6 +61,95 @@ namespace MochiMeadows.Art
                 loaded[name] = sprite;
             }
             ApplyToBank();
+        }
+
+        static IEnumerator LoadSpriteSheet(string bundledDir, string devDir)
+        {
+            // dev sheet first, then bundled (individual PNGs still win over both)
+            string sheetPath = null;
+            if (Application.platform != RuntimePlatform.WebGLPlayer && File.Exists(Path.Combine(devDir, "spritesheet.png")))
+                sheetPath = Path.Combine(devDir, "spritesheet.png");
+            else if (Application.platform != RuntimePlatform.WebGLPlayer && File.Exists(Path.Combine(bundledDir, "spritesheet.png")))
+                sheetPath = Path.Combine(bundledDir, "spritesheet.png");
+
+            Texture2D tex = null;
+            if (sheetPath != null)
+            {
+                tex = LoadTexture(sheetPath);
+            }
+            else if (Application.platform == RuntimePlatform.WebGLPlayer)
+            {
+                var req = UnityEngine.Networking.UnityWebRequestTexture.GetTexture(
+                    Path.Combine(bundledDir, "spritesheet.png").Replace('\\', '/'));
+                yield return req.SendWebRequest();
+                if (req.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+                {
+                    var t = ((UnityEngine.Networking.DownloadHandlerTexture)req.downloadHandler).texture;
+                    t.filterMode = FilterMode.Point;
+                    t.wrapMode = TextureWrapMode.Clamp;
+                    tex = t;
+                }
+            }
+            if (tex == null) yield break;
+
+            // optional frame map; fallback = 64px grid in manifest order
+            string jsonPath = sheetPath != null ? Path.ChangeExtension(sheetPath, ".json") : null;
+            string[] gridNames = null;
+            if (jsonPath != null && File.Exists(jsonPath))
+            {
+                var data = JsonUtility.FromJson<SheetData>(File.ReadAllText(jsonPath));
+                if (data != null && data.frames != null)
+                {
+                    foreach (var f in data.frames)
+                    {
+                        var sprite = SheetSprite(tex, f, name: f.name);
+                        if (sprite != null) loaded[f.name] = sprite;
+                    }
+                    yield break;
+                }
+            }
+            else if (jsonPath == null)
+            {
+                // WebGL bundled: no sidecar json; try manifest order
+                var mf = Path.Combine(bundledDir, "manifest.txt").Replace('\\', '/');
+                var mreq = UnityEngine.Networking.UnityWebRequest.Get(mf);
+                yield return mreq.SendWebRequest();
+                if (mreq.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+                    gridNames = mreq.downloadHandler.text.Split('\n');
+            }
+            if (gridNames == null && sheetPath != null)
+            {
+                var mf = Path.Combine(Path.GetDirectoryName(sheetPath), "manifest.txt");
+                if (File.Exists(mf)) gridNames = File.ReadAllLines(mf);
+            }
+            if (gridNames == null) yield break;
+
+            int cell = 64, perRow = tex.width / cell;
+            for (int i = 0; i < gridNames.Length; i++)
+            {
+                var name = gridNames[i].Trim();
+                if (name.Length == 0) continue;
+                int gx = (i % perRow) * cell, gy = (i / perRow) * cell;
+                var sprite = SheetSprite(tex, new SheetFrame { name = name, x = gx, y = gy, w = cell, h = cell }, name);
+                if (sprite != null) loaded[name] = sprite;
+            }
+        }
+
+        static Sprite SheetSprite(Texture2D tex, SheetFrame f, string name)
+        {
+            if (f.w <= 0 || f.h <= 0) return null;
+            // JSON y is from the TOP (artist-friendly); Unity rects are bottom-up
+            int y = tex.height - f.y - f.h;
+            if (f.x < 0 || y < 0 || f.x + f.w > tex.width || y + f.h > tex.height) return null;
+            var original = GetOriginal(name);
+            float ppu = 16f;
+            if (original != null)
+            {
+                float worldW = original.rect.width / original.pixelsPerUnit;
+                ppu = f.w / worldW;
+            }
+            return Sprite.Create(tex, new Rect(f.x, y, f.w, f.h),
+                new Vector2(0.5f, 0.5f), ppu, 0, SpriteMeshType.FullRect);
         }
 
         static IEnumerator CollectBundledWebGL(string dir, List<string> files)

@@ -56,6 +56,7 @@ namespace MochiMeadows.Ui
         List<GameObject> questRows = new List<GameObject>();
         Button menuSaveBtn, menuQuitBtn, menuResumeBtn, menuTitleBtn;
         GameObject controlsPanel;
+        GameObject newGamePanel;
 
         // speech bubble
         Canvas bubbleCanvas;
@@ -107,6 +108,7 @@ namespace MochiMeadows.Ui
             BuildDecor();
             BuildScrapbook();
             BuildTitle();
+            BuildNewGame();
             BuildMenu();
             BuildControls();
 
@@ -2068,7 +2070,7 @@ titlePanel = new GameObject("Title");
             startBg.color = new Color(0.75f, 0.95f, 0.8f, 1);
             startBg.sprite = RoundedSprite(Palette.Mint);
             startBg.type = Image.Type.Sliced;
-            start.onClick.AddListener(() => StartGame(false));
+            start.onClick.AddListener(() => { newGamePanel.SetActive(true); RefreshNewGame(); });
 
             var cont = CreateButton(titlePanel.transform, "Continue", "Continue", 28, Color.white, out var contBg);
             Rt(cont).anchorMin = new Vector2(0.5f, 0.19f);
@@ -2129,7 +2131,138 @@ titlePanel = new GameObject("Title");
         public void StartGame(bool load)
         {
             titlePanel.SetActive(false);
+            if (AudioService.I != null) AudioService.I.SetTitleMode(false);
             GameManager.I.StartGame(load, this);
+        }
+
+        void BuildNewGame()
+        {
+            newGamePanel = new GameObject("NewGamePanel");
+            newGamePanel.transform.SetParent(Root, false);
+            var nRt = newGamePanel.AddComponent<RectTransform>();
+            nRt.anchorMin = Vector2.zero; nRt.anchorMax = Vector2.one;
+            nRt.offsetMin = Vector2.zero; nRt.offsetMax = Vector2.zero;
+
+            var backdrop = CreateImage(newGamePanel.transform, "Backdrop", null, new Color(0.15f, 0.12f, 0.3f, 0.55f));
+            backdrop.rectTransform.anchorMin = Vector2.zero;
+            backdrop.rectTransform.anchorMax = Vector2.one;
+            backdrop.rectTransform.offsetMin = Vector2.zero;
+            backdrop.rectTransform.offsetMax = Vector2.zero;
+            backdrop.rectTransform.SetAsFirstSibling();
+
+            var panel = CreateImage(newGamePanel.transform, "Panel", RoundedSprite(Palette.Cream), Color.white);
+            panel.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            panel.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            panel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            panel.rectTransform.sizeDelta = new Vector2(560, 400);
+            panel.type = Image.Type.Sliced;
+
+            var title = CreateText(panel.transform, "Title", "New Game", 36, Palette.Chocolate);
+            AddOutline(title, 1f, new Color(0.36f, 0.28f, 0.40f, 0.5f));
+            title.rectTransform.anchorMin = new Vector2(0.5f, 1);
+            title.rectTransform.anchorMax = new Vector2(0.5f, 1);
+            title.rectTransform.pivot = new Vector2(0.5f, 1);
+            title.rectTransform.anchoredPosition = new Vector2(0, -22);
+            title.rectTransform.sizeDelta = new Vector2(440, 46);
+            title.alignment = TextAnchor.MiddleCenter;
+
+            // day length
+            var dayLabel = CreateText(panel.transform, "DayLabel", "Day length", 24, Palette.Chocolate);
+            dayLabel.rectTransform.anchorMin = new Vector2(0, 1);
+            dayLabel.rectTransform.anchorMax = new Vector2(0, 1);
+            dayLabel.rectTransform.pivot = new Vector2(0, 1);
+            dayLabel.rectTransform.anchoredPosition = new Vector2(36, -84);
+            dayLabel.rectTransform.sizeDelta = new Vector2(150, 40);
+            dayLabel.alignment = TextAnchor.MiddleLeft;
+
+            for (int i = 0; i < 3; i++)
+            {
+                int idx = i;
+                var btn = CreateButton(panel.transform, "Day" + i, GameManager.DayLengthNames[i], 20, Color.white, out var bg);
+                Rt(btn).anchorMin = new Vector2(0.5f, 1);
+                Rt(btn).anchorMax = new Vector2(0.5f, 1);
+                Rt(btn).pivot = new Vector2(0.5f, 1);
+                Rt(btn).anchoredPosition = new Vector2(-95 + i * 110, -84);
+                Rt(btn).sizeDelta = new Vector2(100, 52);
+                bg.sprite = RoundedSprite(Palette.BabyBlue);
+                bg.type = Image.Type.Sliced;
+                bg.color = new Color(0.8f, 0.87f, 0.98f, 1);
+                btn.onClick.AddListener(() => { GameManager.I.SetDayLength(idx); RefreshNewGame(); });
+            }
+
+            var fundsLabel = CreateText(panel.transform, "FundsLabel", "Starting coins", 24, Palette.Chocolate);
+            fundsLabel.rectTransform.anchorMin = new Vector2(0, 1);
+            fundsLabel.rectTransform.anchorMax = new Vector2(0, 1);
+            fundsLabel.rectTransform.pivot = new Vector2(0, 1);
+            fundsLabel.rectTransform.anchoredPosition = new Vector2(36, -150);
+            fundsLabel.rectTransform.sizeDelta = new Vector2(180, 40);
+            fundsLabel.alignment = TextAnchor.MiddleLeft;
+
+            for (int i = 0; i < 3; i++)
+            {
+                int idx = i;
+                var btn = CreateButton(panel.transform, "Funds" + i, GameManager.FundsNames[i], 18, Color.white, out var bg);
+                Rt(btn).anchorMin = new Vector2(0.5f, 1);
+                Rt(btn).anchorMax = new Vector2(0.5f, 1);
+                Rt(btn).pivot = new Vector2(0.5f, 1);
+                Rt(btn).anchoredPosition = new Vector2(-95 + i * 110, -150);
+                Rt(btn).sizeDelta = new Vector2(100, 52);
+                bg.sprite = RoundedSprite(Palette.Peach);
+                bg.type = Image.Type.Sliced;
+                bg.color = new Color(0.98f, 0.88f, 0.75f, 1);
+                btn.onClick.AddListener(() => { GameManager.I.SetFunds(idx); RefreshNewGame(); });
+            }
+
+            var start = CreateButton(panel.transform, "Start", "Start a cozy day", 28, Color.white, out var startBg);
+            Rt(start).anchorMin = new Vector2(0.5f, 0);
+            Rt(start).anchorMax = new Vector2(0.5f, 0);
+            Rt(start).pivot = new Vector2(0.5f, 0);
+            Rt(start).anchoredPosition = new Vector2(0, 26);
+            Rt(start).sizeDelta = new Vector2(300, 62);
+            startBg.color = new Color(0.75f, 0.95f, 0.8f, 1);
+            startBg.sprite = RoundedSprite(Palette.Mint);
+            startBg.type = Image.Type.Sliced;
+            start.onClick.AddListener(() => { newGamePanel.SetActive(false); StartGame(false); });
+
+            var back = CreateButton(panel.transform, "Back", "← Back", 20, Color.white, out var backBg);
+            Rt(back).anchorMin = new Vector2(0, 0);
+            Rt(back).anchorMax = new Vector2(0, 0);
+            Rt(back).pivot = new Vector2(0, 0);
+            Rt(back).anchoredPosition = new Vector2(20, 18);
+            Rt(back).sizeDelta = new Vector2(110, 44);
+            backBg.color = new Color(0.9f, 0.84f, 0.98f, 1);
+            backBg.sprite = RoundedSprite(Palette.Lavender);
+            backBg.type = Image.Type.Sliced;
+            back.onClick.AddListener(() => newGamePanel.SetActive(false));
+
+            var closeBtn = CreateButton(panel.transform, "Close", "✕", 30, Color.white, out var closeBg);
+            Rt(closeBtn).anchorMin = new Vector2(1, 1);
+            Rt(closeBtn).anchorMax = new Vector2(1, 1);
+            Rt(closeBtn).pivot = new Vector2(1, 1);
+            Rt(closeBtn).anchoredPosition = new Vector2(-14, -14);
+            Rt(closeBtn).sizeDelta = new Vector2(52, 52);
+            closeBg.color = new Color(0.9f, 0.6f, 0.65f, 1);
+            closeBg.sprite = RoundedSprite(Palette.Blush);
+            closeBg.type = Image.Type.Sliced;
+            closeBtn.onClick.AddListener(() => newGamePanel.SetActive(false));
+
+            newGamePanel.SetActive(false);
+        }
+
+        void RefreshNewGame()
+        {
+            // highlight the selected options
+            if (newGamePanel == null) return;
+            var gm = GameManager.I;
+            for (int i = 0; i < 3; i++)
+            {
+                var dayBtn = newGamePanel.transform.Find("Panel/Day" + i);
+                var fundsBtn = newGamePanel.transform.Find("Panel/Funds" + i);
+                if (dayBtn != null)
+                    dayBtn.GetComponent<Image>().color = i == gm.DayLengthOption ? Color.white : new Color(0.8f, 0.87f, 0.98f, 0.5f);
+                if (fundsBtn != null)
+                    fundsBtn.GetComponent<Image>().color = i == gm.StartMoneyOption ? Color.white : new Color(0.98f, 0.88f, 0.75f, 0.5f);
+            }
         }
 
         void BuildMenu()
@@ -2468,6 +2601,7 @@ titlePanel = new GameObject("Title");
 
         public void ReturnToTitle()
         {
+            if (AudioService.I != null) AudioService.I.SetTitleMode(true);
             var gm = GameManager.I;
             if (gm != null && gm.GameStarted)
             {
@@ -2486,6 +2620,12 @@ titlePanel = new GameObject("Title");
             CloseMenu();
             titlePanel.SetActive(true);
             RefreshTitleButtons();
+        }
+
+        public void ShowNewGame()
+        {
+            RefreshNewGame();
+            newGamePanel.SetActive(true);
         }
 
         public void ShowControls()

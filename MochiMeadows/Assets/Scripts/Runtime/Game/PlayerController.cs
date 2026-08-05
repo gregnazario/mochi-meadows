@@ -61,7 +61,7 @@ namespace MochiMeadows.Game
                 if (stepT <= 0f)
                 {
                     stepT = 0.3f;
-                    gm.Audio.Play(AudioService.Sfx.Step);
+                    gm.Audio.Play(StepSoundFor());
                 }
             }
             bobT += Time.deltaTime * (moving ? 9f : 1f);
@@ -95,6 +95,31 @@ namespace MochiMeadows.Game
             // hotbar selection
             if (input.HotbarPressed.HasValue)
                 gm.SelectHotbar(input.HotbarPressed.Value);
+        }
+
+        AudioService.Sfx StepSoundFor()
+        {
+            var gm = GameManager.I;
+            if (gm == null) return AudioService.Sfx.Step;
+            var plot = gm.Farm.WorldToPlot(transform.position);
+            if (gm.Farm.InBounds(plot.x, plot.y))
+            {
+                var st = gm.Farm.Get(plot.x, plot.y).state;
+                if (st == TileState.Tilled || st == TileState.Watered || st == TileState.Cropped)
+                    return AudioService.Sfx.StepSoil;
+            }
+            var lvl = Core.LevelConfig.Current;
+            if (lvl.paths != null)
+            {
+                int wx = Mathf.FloorToInt(transform.position.x), wy = Mathf.FloorToInt(transform.position.y);
+                foreach (var path in lvl.paths)
+                {
+                    if (wx >= Mathf.Min(path.x0, path.x1) && wx <= Mathf.Max(path.x0, path.x1)
+                        && wy >= Mathf.Min(path.y0, path.y1) && wy <= Mathf.Max(path.y0, path.y1))
+                        return AudioService.Sfx.StepPath;
+                }
+            }
+            return AudioService.Sfx.Step;
         }
 
         void UpdateSprite()

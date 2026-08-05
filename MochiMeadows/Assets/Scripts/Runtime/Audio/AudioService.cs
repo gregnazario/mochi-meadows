@@ -9,7 +9,7 @@ namespace MochiMeadows.Audio
         public enum Sfx
         {
             Pop, Coin, Water, Hoe, Sprout, Harvest, Tap, Nope, Meow, MeowSoft, Sleep, Wake, UISelect,
-            Step, Swing, Splash, Chirp
+            Step, StepPath, StepSoil, Swing, Splash, Chirp
         }
 
         public static AudioService I;
@@ -21,6 +21,7 @@ namespace MochiMeadows.Audio
         bool musicOn = true;
         public float MusicVolume = 1f;
         public float SfxVolume = 1f;
+        bool titleMode;
 
         // gentle lullaby state
         float nextNoteTime;
@@ -62,6 +63,8 @@ namespace MochiMeadows.Audio
             clips[Sfx.Sleep] = Tone(new float[] { 660f, 550f, 440f }, new float[] { 0.15f, 0.15f, 0.4f }, 0.4f);
             clips[Sfx.Wake] = Tone(new float[] { 440f, 550f, 660f, 880f }, new float[] { 0.1f, 0.1f, 0.1f, 0.25f }, 0.4f);
             clips[Sfx.Step] = Tone(new float[] { 320f }, new float[] { 0.035f }, 0.10f);
+            clips[Sfx.StepPath] = Tone(new float[] { 420f }, new float[] { 0.04f }, 0.10f);
+            clips[Sfx.StepSoil] = Tone(new float[] { 260f }, new float[] { 0.045f }, 0.11f);
             clips[Sfx.Swing] = Noise(0.12f, 1600f, 0.25f);
             clips[Sfx.Splash] = Noise(0.3f, 900f, 0.4f);
             clips[Sfx.Chirp] = Tone(new float[] { 2300f, 1900f, 2400f }, new float[] { 0.04f, 0.05f, 0.06f }, 0.12f);
@@ -74,6 +77,8 @@ namespace MochiMeadows.Audio
         }
 
         public void ToggleMusic() { musicOn = !musicOn; }
+
+        public void SetTitleMode(bool on) { titleMode = on; }
 
         AudioClip rainClip;
         public void StartRain()
@@ -138,6 +143,7 @@ namespace MochiMeadows.Audio
 
         float NoteGap(int s)
         {
+            if (titleMode) return 1.25f;   // slow, dreamy title lullaby
             int bar = s / 8;
             if (bar % 8 == 7) return 0.9f; // breath at phrase end
             return (s % 2 == 0) ? 0.45f : 0.30f;
@@ -155,10 +161,9 @@ namespace MochiMeadows.Audio
             int idx = melody[s % melody.Length];
             if (idx >= 0)
             {
-                float f = scale[idx];
-                // slight octave lift on every 4th note, soft volume
-                AudioClip note = Tone(new[] { f }, new[] { 0.42f }, 0.16f);
-                musicSource.PlayOneShot(note, 0.5f * MusicVolume);
+                float f = scale[idx] * (titleMode ? 0.5f : 1f); // an octave lower on title
+                AudioClip note = Tone(new[] { f }, new[] { titleMode ? 0.9f : 0.42f }, 0.16f);
+                musicSource.PlayOneShot(note, (titleMode ? 0.4f : 0.5f) * MusicVolume);
             }
             // soft low drone on the beat
             if (s % 2 == 0)

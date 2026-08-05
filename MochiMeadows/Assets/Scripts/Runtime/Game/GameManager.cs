@@ -18,8 +18,39 @@ namespace MochiMeadows.Game
         public const int MaxEnergy = 100;
         public const int DayStartMinute = 6 * 60;     // 6:00
         public const int DayEndMinute = 24 * 60;      // 24:00
-        const float DayLengthSeconds = 360f;          // one cozy day = 6 real minutes
-        public const float MinutesPerSecond = (DayEndMinute - DayStartMinute) / DayLengthSeconds;
+        public float DayLengthSeconds = 360f;         // one cozy day in real seconds
+        public int StartMoneyOption = 0;              // 0 starter / 1 cozy / 2 rich
+        public int DayLengthOption = 1;               // 0 short / 1 cozy / 2 long
+
+        public float MinutesPerSecond => (DayEndMinute - DayStartMinute) / DayLengthSeconds;
+
+        // new-game options
+        public static readonly string[] DayLengthNames = { "Short (3 min)", "Cozy (6 min)", "Long (10 min)" };
+        public static readonly float[] DayLengthValues = { 180f, 360f, 600f };
+        public static readonly string[] FundsNames = { "Starter (60)", "Cozy (150)", "Rich (500)" };
+        public static readonly int[] FundsValues = { 60, 150, 500 };
+
+        public void ApplyNewGameOptions()
+        {
+            DayLengthOption = Mathf.Clamp(PlayerPrefs.GetInt("mochi_daylen", 1), 0, 2);
+            DayLengthSeconds = DayLengthValues[DayLengthOption];
+            StartMoneyOption = Mathf.Clamp(PlayerPrefs.GetInt("mochi_funds", 0), 0, 2);
+        }
+
+        public void SetDayLength(int i)
+        {
+            DayLengthOption = Mathf.Clamp(i, 0, 2);
+            PlayerPrefs.SetInt("mochi_daylen", DayLengthOption);
+            PlayerPrefs.Save();
+            DayLengthSeconds = DayLengthValues[DayLengthOption];
+        }
+
+        public void SetFunds(int i)
+        {
+            PlayerPrefs.SetInt("mochi_funds", i);
+            PlayerPrefs.Save();
+            StartMoneyOption = Mathf.Clamp(i, 0, 2);
+        }
 
         public int Day = 1;
         public float ClockMinutes = DayStartMinute;   // minutes since midnight
@@ -551,7 +582,7 @@ namespace MochiMeadows.Game
         {
             Day = 1;
             ClockMinutes = DayStartMinute;
-            Money = 60;
+            Money = FundsValues[StartMoneyOption];
             Energy = MaxEnergy;
             System.Array.Clear(Seeds, 0, Seeds.Length);
             System.Array.Clear(Basket, 0, Basket.Length);
