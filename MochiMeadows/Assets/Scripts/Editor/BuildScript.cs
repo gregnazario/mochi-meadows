@@ -25,6 +25,21 @@ namespace MochiMeadows.EditorTools
         [MenuItem("Tools/Mochi Meadows/Build iOS (Xcode project)")]
         public static void BuildiOS() => Build("Builds/iOS", BuildTarget.iOS, BuildTargetGroup.iOS);
 
+        [MenuItem("Tools/Mochi Meadows/Export Art to StreamingAssets")]
+        public static void ExportArtToStreamingAssets()
+        {
+            MochiMeadows.Art.SpriteBank.BuildAll();
+            string exportDir = MochiMeadows.Art.SpriteExporter.ExportAll();
+            string targetDir = System.IO.Path.Combine(UnityEngine.Application.dataPath, "StreamingAssets", "art");
+            System.IO.Directory.CreateDirectory(targetDir);
+            foreach (var file in System.IO.Directory.GetFiles(exportDir))
+            {
+                string dest = System.IO.Path.Combine(targetDir, System.IO.Path.GetFileName(file));
+                System.IO.File.Copy(file, dest, true);
+            }
+            Debug.Log($"[Art] Copied all exported art PNGs to {targetDir}");
+        }
+
         // `-simulator` builds the Xcode project for the iOS Simulator SDK.
         public static void BuildiOSSim()
         {
