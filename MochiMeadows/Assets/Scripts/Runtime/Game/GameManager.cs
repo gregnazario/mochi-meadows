@@ -56,9 +56,9 @@ namespace MochiMeadows.Game
         public float ClockMinutes = DayStartMinute;   // minutes since midnight
         public int Money = 60;
         public float Energy = MaxEnergy;
-        public int[] Seeds = new int[6];              // seed packets owned
-        public int[] Basket = new int[6];             // harvested items
-        public int[] FishBasket = new int[3];         // caught fish
+        public int[] Seeds = new int[7];              // seed packets owned
+        public int[] Basket = new int[7];             // harvested items
+        public int[] FishBasket = new int[4];         // caught fish
         public int EggBasket;                          // chicken eggs
         public int HoneyBasket;                        // beehive honey
         public const int HoneySellPrice = 30;
@@ -71,9 +71,9 @@ namespace MochiMeadows.Game
         public int TotalEarned;
 
         // --- decorations ---
-        public static readonly string[] DecorNames = { "Fence", "Flower", "Lantern", "Gnome", "Beehive" };
-        public static readonly int[] DecorCosts = { 10, 15, 30, 50, 60 };
-        public int[] DecorInventory = new int[5];
+        public static readonly string[] DecorNames = { "Fence", "Flower", "Lantern", "Gnome", "Beehive", "Wind Chime" };
+        public static readonly int[] DecorCosts = { 10, 15, 30, 50, 60, 25 };
+        public int[] DecorInventory = new int[6];
         public int DecorPlacing = -1;
         public const int DecorMax = 40;
         public int DecorCount;
@@ -97,7 +97,8 @@ namespace MochiMeadows.Game
         }
 
         public Sprite DecorSprite(int i) =>
-            i == 0 ? SpriteBank.Fence1 : i == 1 ? SpriteBank.Flower0 : i == 2 ? SpriteBank.Lantern : i == 3 ? SpriteBank.Gnome : SpriteBank.Beehive;
+            i == 0 ? SpriteBank.Fence1 : i == 1 ? SpriteBank.Flower0 : i == 2 ? SpriteBank.Lantern
+                : i == 3 ? SpriteBank.Gnome : i == 4 ? SpriteBank.Beehive : SpriteBank.WindChime;
 
         public void StartPlacing(int i)
         {
@@ -120,6 +121,29 @@ namespace MochiMeadows.Game
             Audio.Play(AudioService.Sfx.Pop);
             if (DecorInventory[DecorPlacing] <= 0) DecorPlacing = -1;
             return true;
+        }
+
+        public void AddDecorDirect(int wx, int wy, int type)
+        {
+            if (DecorCount >= DecorMax) return;
+            int idx = DecorCount++;
+            DecorX[idx] = wx; DecorY[idx] = wy; DecorType[idx] = type;
+            SpawnDecorVisual(idx);
+        }
+
+        public void PickupDecorAt(int index)
+        {
+            if (index < 0 || index >= DecorCount) return;
+            if (decorRoot != null)
+            {
+                var child = decorRoot.Find($"decor_{index}");
+                if (child != null) UnityEngine.Object.Destroy(child.gameObject);
+            }
+            for (int j = index; j < DecorCount - 1; j++)
+            {
+                DecorX[j] = DecorX[j + 1]; DecorY[j] = DecorY[j + 1]; DecorType[j] = DecorType[j + 1];
+            }
+            DecorCount--;
         }
 
         public bool TryPickupDecor(int wx, int wy)
@@ -170,11 +194,12 @@ namespace MochiMeadows.Game
         }
         public const int EggSellPrice = 15;
         public const int EggEnergy = 12;
+        public const int MoonJellyWeight = 12;
         public bool IsSleeping;
         public bool GameStarted;
         public bool IsPaused;
 
-        public int[] Hotbar = { 0, 1, 2, 3, 4, 5, 6, 7, 8 }; // slot -> item id (see ItemId)
+        public int[] Hotbar = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }; // slot -> item id (see ItemId)
         public bool DevPlaytest;
 
         // --- player outfits ---
@@ -601,7 +626,7 @@ namespace MochiMeadows.Game
             OwnedDressesMask = 1; OwnedHairsMask = 1;
             SpriteBank.RebuildPlayerSprites(DressColors[0], HairColors[0]);
             SelectedSlot = 0;
-            Hotbar = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
+            Hotbar = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             Player.TeleportTo(new Vector3(Core.LevelConfig.Current.playerSpawn.x, Core.LevelConfig.Current.playerSpawn.y, -1));
             if (Mochi != null) Mochi.transform.position = new Vector3(Core.LevelConfig.Current.mochi.home.x, Core.LevelConfig.Current.mochi.home.y, -1);
             Farm.ResetGrid();
@@ -645,11 +670,19 @@ namespace MochiMeadows.Game
                 DecorInventory[i] = i < data.decorInventory.Length ? data.decorInventory[i] : 0;
             RebuildDecorVisuals();
             SelectedSlot = Mathf.Clamp(data.selectedSlot, 0, Hotbar.Length - 1);
-            Hotbar = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
+            Hotbar = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             for (int i = 0; i < Hotbar.Length; i++)
                 Hotbar[i] = i < data.hotbar.Length ? data.hotbar[i] : i;
             if (data.playerX != 0 || data.playerY != 0)
+            {
                 Player.TeleportTo(new Vector3(data.playerX, data.playerY, -1));
+                var maps = Core.MapManager.I;
+                if (maps != null && data.indoors != maps.Indoors)
+                {
+                    if (data.indoors) maps.EnterHouse(this, Player);
+                    else maps.ExitHouse(this, Player);
+                }
+            }
             if (Mochi != null && (data.mochiX != 0 || data.mochiY != 0))
                 Mochi.transform.position = new Vector3(data.mochiX, data.mochiY, -1);
 

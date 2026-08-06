@@ -73,6 +73,18 @@ namespace MochiMeadows.EditorTools
             ConfigurePlayer(target, group);
 
             EditorUserBuildSettings.SwitchActiveBuildTarget(group, target);
+            if (target == BuildTarget.Android || target == BuildTarget.iOS)
+            {
+                IconGenerator.EnsureIcons();
+            }
+            else if (target == BuildTarget.WebGL)
+            {
+                // PWA icons only (no icon kinds on WebGL)
+                var big = IconGenerator.RenderIcon(1024);
+                IconGenerator.WritePng(big, "Assets/WebGLTemplates/MochiPWA/icons/icon-512.png");
+                IconGenerator.WritePng(IconGenerator.RenderIcon(192), "Assets/WebGLTemplates/MochiPWA/icons/icon-192.png");
+                IconGenerator.WritePng(IconGenerator.RenderIcon(180), "Assets/WebGLTemplates/MochiPWA/icons/apple-touch-icon.png");
+            }
             if (target == BuildTarget.Android)
             {
                 PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
@@ -113,8 +125,8 @@ namespace MochiMeadows.EditorTools
                 // GitHub Pages / static hosts don't send Content-Encoding: br;
                 // this makes the loader decompress brotli in the browser instead.
                 PlayerSettings.WebGL.decompressionFallback = true;
-                // Custom template: canvas fills the browser window (responsive).
-                PlayerSettings.WebGL.template = "PROJECT:MochiMeadows";
+                // PWA template: installable + offline, canvas fills the window.
+                PlayerSettings.WebGL.template = "PROJECT:MochiPWA";
             }
         }
     }

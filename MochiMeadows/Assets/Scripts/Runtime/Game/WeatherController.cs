@@ -12,6 +12,7 @@ namespace MochiMeadows.Game
         public static WeatherController I;
 
         public bool Raining { get; private set; }
+        public bool Active = true;
         public float RainAmount { get; private set; }   // 0..1, for sky/audio blending
 
         GameManager gm;
@@ -106,7 +107,7 @@ namespace MochiMeadows.Game
         void Update()
         {
             if (gm == null) return;
-            if (gm.IsPaused) return;
+            if (gm.IsPaused || !Active) return;
 
             // dawn birdsong
             if (!Raining && gm.ClockMinutes > 6 * 60 && gm.ClockMinutes < 8 * 60)

@@ -10,7 +10,7 @@ namespace MochiMeadows.Game
     // Chibi player: walk, face, interact with tools.
     public class PlayerController : MonoBehaviour
     {
-        public enum ItemId { Hoe = 0, Can = 1, Strawberry = 2, Blueberry = 3, Pumpkitten = 4, Sakura = 5, Melon = 6, MochiRice = 7, Hand = 8 }
+        public enum ItemId { Hoe = 0, Can = 1, Strawberry = 2, Blueberry = 3, Pumpkitten = 4, Sakura = 5, Melon = 6, MochiRice = 7, BunnyCarrot = 8, Hand = 9 }
 
         public float Speed = 3.4f;
 
@@ -49,6 +49,7 @@ namespace MochiMeadows.Game
 
             if (gm.IsSleeping || gm.IsPaused) return;
             if (gm.IsFishing) return;
+            CheckDoors();
 
             Vector2 move = input.MoveAxis;
             bool moving = move.sqrMagnitude > 0.01f;
@@ -95,6 +96,26 @@ namespace MochiMeadows.Game
             // hotbar selection
             if (input.HotbarPressed.HasValue)
                 gm.SelectHotbar(input.HotbarPressed.Value);
+        }
+
+        void CheckDoors()
+        {
+            var maps = Core.MapManager.I;
+            if (maps == null) return;
+            var lvl = Core.LevelConfig.Current;
+            int wx = Mathf.FloorToInt(transform.position.x), wy = Mathf.FloorToInt(transform.position.y);
+            if (maps.Indoors)
+            {
+                var door = lvl.spots.interiorDoor;
+                if (Mathf.Abs(transform.position.x - (door[0] + 0.5f)) < 0.55f && Mathf.Abs(transform.position.y - (door[1] + 0.5f)) < 0.55f)
+                    maps.ExitHouse(GameManager.I, this);
+            }
+            else
+            {
+                var door = lvl.spots.houseDoor;
+                if (Mathf.Abs(transform.position.x - (door[0] + 0.5f)) < 0.55f && Mathf.Abs(transform.position.y - (door[1] + 0.5f)) < 0.55f)
+                    maps.EnterHouse(GameManager.I, this);
+            }
         }
 
         AudioService.Sfx StepSoundFor()
@@ -150,16 +171,22 @@ namespace MochiMeadows.Game
                 if (TryFish()) return;
                 if (TryOpenKitchen()) return;
                 if (TrySleepAtBlanket()) return;
+                if (TrySleepAtBed()) return;
             }
 
             // 2) Farm tile action
             var result = FarmGrid.ActionResult.Nothing;
+            if (Core.MapManager.I != null && Core.MapManager.I.Indoors)
+            {
+                gm.Audio.Play(AudioService.Sfx.Tap);
+                return;
+            }
             switch ((ItemId)item)
             {
                 case ItemId.Hoe: result = farm.Hoe(target.x, target.y); break;
                 case ItemId.Can: result = farm.Water(target.x, target.y); break;
                 case ItemId.Strawberry: case ItemId.Blueberry: case ItemId.Pumpkitten: case ItemId.Sakura:
-                case ItemId.Melon: case ItemId.MochiRice:
+                case ItemId.Melon: case ItemId.MochiRice: case ItemId.BunnyCarrot:
                     result = farm.Plant(target.x, target.y, (CropId)(item - (int)ItemId.Strawberry)); break;
                 case ItemId.Hand: result = farm.Harvest(target.x, target.y); break;
             }
@@ -170,7 +197,7 @@ namespace MochiMeadows.Game
                 case FarmGrid.ActionResult.Ok:
                     if (item == (int)ItemId.Hoe) { gm.Audio.Play(AudioService.Sfx.Hoe); gm.Audio.Play(AudioService.Sfx.Swing); gm.Farm.SpawnArc(target, Art.Palette.Wood); gm.Farm.SpawnTilePuff(target, Art.Palette.Soil); }
                     else if (item == (int)ItemId.Can) { gm.Audio.Play(AudioService.Sfx.Water); gm.Audio.Play(AudioService.Sfx.Swing); gm.Farm.SpawnArc(target, Art.Palette.BabyBlue); gm.Farm.SpawnTilePuff(target, Art.Palette.BabyBlue); }
-                    else if (item >= (int)ItemId.Strawberry && item <= (int)ItemId.MochiRice) { gm.Audio.Play(AudioService.Sfx.Sprout); gm.Farm.SpawnArc(target, Art.Palette.Mint); gm.Farm.SpawnTilePuff(target, Art.Palette.Mint); }
+                    else if (item >= (int)ItemId.Strawberry && item <= (int)ItemId.BunnyCarrot) { gm.Audio.Play(AudioService.Sfx.Sprout); gm.Farm.SpawnArc(target, Art.Palette.Mint); gm.Farm.SpawnTilePuff(target, Art.Palette.Mint); }
                     break;
                 case FarmGrid.ActionResult.NoEnergy: break;
                 case FarmGrid.ActionResult.WrongTile: gm.Audio.Play(AudioService.Sfx.Tap); break;
@@ -206,9 +233,26 @@ namespace MochiMeadows.Game
         {
             var gm = GameManager.I;
             if (gm == null) return false;
+            var maps = Core.MapManager.I;
+            if (maps != null && maps.Indoors)
+            {
+                if (Vector2.Distance(transform.position, maps.KitchenPos) > 1.6f) return false;
+                gm.Audio.Play(AudioService.Sfx.UISelect);
+                gm.Ui.OpenCooking();
+                return true;
+            }
             if (Vector2.Distance(transform.position, GameBootstrap.KitchenPos) > 1.9f) return false;
             gm.Audio.Play(AudioService.Sfx.UISelect);
             gm.Ui.OpenCooking();
+            return true;
+        }
+
+        bool TrySleepAtBed()
+        {
+            var maps = Core.MapManager.I;
+            if (maps == null || !maps.Indoors) return false;
+            if (Vector2.Distance(transform.position, maps.BedPos) > 1.6f) return false;
+            GameManager.I.SleepAtBlanket();
             return true;
         }
 

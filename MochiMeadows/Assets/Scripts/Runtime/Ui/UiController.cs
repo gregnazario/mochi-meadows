@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using MochiMeadows.Art;
 using MochiMeadows.Game;
 using MochiMeadows.Inputs;
+using MochiMeadows.Core;
 using MochiMeadows.Audio;
 
 namespace MochiMeadows.Ui
@@ -15,15 +16,16 @@ namespace MochiMeadows.Ui
     {
         public Canvas Canvas { get; private set; }
         public bool IsFishing => fishingActive;
+        public bool EditorActive;
         public RectTransform Root { get; private set; }
 
         Font font;
         Image fadeImage;
         Image[] energyHearts = new Image[10];
         Text dayText, clockText, coinText, toastText;
-        Image[] hotbarSlots = new Image[9];
-        Image[] hotbarIcons = new Image[9];
-        Text[] hotbarCounts = new Text[9];
+        Image[] hotbarSlots = new Image[10];
+        Image[] hotbarIcons = new Image[10];
+        Text[] hotbarCounts = new Text[10];
         Text toastTitle;
         RectTransform hotbarRect;
 
@@ -262,11 +264,11 @@ hudRoot = new GameObject("Hud");
             hotbarRect.anchorMax = new Vector2(0.5f, 0);
             hotbarRect.pivot = new Vector2(0.5f, 0);
             hotbarRect.anchoredPosition = new Vector2(0, 14);
-            hotbarRect.sizeDelta = new Vector2(9 * 96 + 16, 100);
+            hotbarRect.sizeDelta = new Vector2(10 * 96 + 16, 100);
             hotbarRect.GetComponent<Image>().type = Image.Type.Sliced;
             hotbarRect.GetComponent<Image>().raycastTarget = false;
 
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < 10; i++)
             {
                 var slot = CreateImage(hotbarRect, "Slot" + i, RoundedSprite(Palette.Cream), Color.white);
                 slot.rectTransform.anchorMin = new Vector2(0, 0);
@@ -501,6 +503,17 @@ hudRoot = new GameObject("Hud");
                 fishingTapQueued = true;
                 return;
             }
+            if (EditorActive)
+            {
+                var camE = Camera.main;
+                if (camE != null)
+                {
+                    Vector3 w = camE.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, -camE.transform.position.z));
+                    int wx = Mathf.FloorToInt(w.x), wy = Mathf.FloorToInt(w.y);
+                    if (LevelEditor.I != null) LevelEditor.I.OnTileTap(wx, wy);
+                }
+                return;
+            }
             var gm0 = GameManager.I;
             if (gm0 != null && gm0.DecorPlacing >= 0)
             {
@@ -660,7 +673,7 @@ shopPanel = new GameObject("ShopPanel");
             seedsHeader.alignment = TextAnchor.MiddleCenter;
 
             float y = -220;
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 7; i++)
             {
                 var def = CropDef.All[i];
                 var row = CreateImage(panel.transform, "SeedRow" + i, RoundedSprite(Palette.White), new Color(1, 1, 1, 0.7f));
@@ -718,7 +731,7 @@ shopPanel = new GameObject("ShopPanel");
             decorHeader.alignment = TextAnchor.MiddleCenter;
             y -= 46;
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 6; i++)
             {
                 var row = CreateImage(panel.transform, "DecorRow" + i, RoundedSprite(Palette.White), new Color(1, 1, 1, 0.7f));
                 row.rectTransform.anchorMin = new Vector2(0.5f, 1);
@@ -880,7 +893,7 @@ shopPanel = new GameObject("ShopPanel");
             foreach (var r in shopRows) Destroy(r);
             shopRows.Clear();
             float y = 0;
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 7; i++)
             {
                 int count = GameManager.I.Basket[i];
                 if (count <= 0) continue;
@@ -940,7 +953,7 @@ shopPanel = new GameObject("ShopPanel");
             }
             // fish rows
             float fy = y;
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
                 int count = GameManager.I.FishBasket[i];
                 if (count <= 0) continue;
@@ -953,7 +966,7 @@ shopPanel = new GameObject("ShopPanel");
                 row.rectTransform.sizeDelta = new Vector2(600, 60);
                 row.type = Image.Type.Sliced;
 
-                var icon = CreateImage(row.transform, "Icon", i == 0 ? SpriteBank.Goldfish : i == 1 ? SpriteBank.BubbleFish : SpriteBank.SakuraFish, Color.white);
+                var icon = CreateImage(row.transform, "Icon", i == 0 ? SpriteBank.Goldfish : i == 1 ? SpriteBank.BubbleFish : i == 2 ? SpriteBank.SakuraFish : SpriteBank.MoonJelly, Color.white);
                 icon.rectTransform.anchorMin = new Vector2(0, 0);
                 icon.rectTransform.anchorMax = new Vector2(0, 1);
                 icon.rectTransform.sizeDelta = new Vector2(52, 52);
@@ -1329,13 +1342,13 @@ shopPanel = new GameObject("ShopPanel");
             fishingDone = true;
             var gm = GameManager.I;
             int roll = Random.Range(0, 100);
-            int fishId = roll < 50 ? 0 : roll < 82 ? 1 : 2;
+            int fishId = roll < 50 ? 0 : roll < 82 ? 1 : roll < 88 ? 3 : 2;
             gm.AddFish(fishId, 1);
             gm.AddEnergy(2f);
             gm.Audio.Play(AudioService.Sfx.Harvest);
             gm.Announce($"Caught a {FishDef.All[fishId].Name}! So shiny~");
             fishZone.gameObject.SetActive(true);
-            var sprite = fishId == 0 ? SpriteBank.Goldfish : fishId == 1 ? SpriteBank.BubbleFish : SpriteBank.SakuraFish;
+            var sprite = fishId == 0 ? SpriteBank.Goldfish : fishId == 1 ? SpriteBank.BubbleFish : fishId == 2 ? SpriteBank.SakuraFish : SpriteBank.MoonJelly;
             var img = fishZone.GetComponent<Image>();
             img.sprite = sprite;
             img.color = Color.white;
@@ -1683,10 +1696,10 @@ shopPanel = new GameObject("ShopPanel");
                 AddScrapRow(SpriteBank.CropSprites[i, 3], CropDef.All[i].Name, got, ref y);
             }
             AddScrapHeader("Fish", ref y);
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
                 bool got = (gm.CollectedFishMask & (1 << i)) != 0;
-                AddScrapRow(i == 0 ? SpriteBank.Goldfish : i == 1 ? SpriteBank.BubbleFish : SpriteBank.SakuraFish, FishDef.All[i].Name, got, ref y);
+                AddScrapRow(i == 0 ? SpriteBank.Goldfish : i == 1 ? SpriteBank.BubbleFish : i == 2 ? SpriteBank.SakuraFish : SpriteBank.MoonJelly, FishDef.All[i].Name, got, ref y);
             }
             AddScrapHeader("Delicacies", ref y);
             AddScrapRow(SpriteBank.Egg, "Eggs", gm.CollectedEgg, ref y);
@@ -2323,6 +2336,18 @@ titlePanel = new GameObject("Title");
             save.onClick.AddListener(() => { SaveSystem.Save(GameManager.I); GameManager.I.Announce("Saved! <3"); });
             y -= 76;
 
+            var share = CreateButton(panel.transform, "Share", "📷 Share farm", 22, Color.white, out var shareBg);
+            Rt(share).anchorMin = new Vector2(0.5f, 1);
+            Rt(share).anchorMax = new Vector2(0.5f, 1);
+            Rt(share).pivot = new Vector2(0.5f, 1);
+            Rt(share).anchoredPosition = new Vector2(0, y);
+            Rt(share).sizeDelta = new Vector2(440, 56);
+            shareBg.color = new Color(0.95f, 0.9f, 0.75f, 1);
+            shareBg.sprite = RoundedSprite(Palette.Cream);
+            shareBg.type = Image.Type.Sliced;
+            share.onClick.AddListener(() => TakeFarmPhoto());
+            y -= 70;
+
             var controls = CreateButton(panel.transform, "Controls", "Controls", 26, Color.white, out var controlsBg);
             Rt(controls).anchorMin = new Vector2(0.5f, 1);
             Rt(controls).anchorMax = new Vector2(0.5f, 1);
@@ -2593,6 +2618,38 @@ titlePanel = new GameObject("Title");
             if (GameManager.I != null && started) GameManager.I.IsPaused = true;
         }
 
+        public void TakeFarmPhoto()
+        {
+            if (GameManager.I == null) return;
+            StartCoroutine(PhotoRoutine());
+        }
+
+        System.Collections.IEnumerator PhotoRoutine()
+        {
+            var gm = GameManager.I;
+            // camera flash
+            var flash = CreateImage(Root, "Flash", null, Color.white);
+            flash.rectTransform.anchorMin = Vector2.zero;
+            flash.rectTransform.anchorMax = Vector2.one;
+            flash.rectTransform.offsetMin = Vector2.zero;
+            flash.rectTransform.offsetMax = Vector2.zero;
+            flash.raycastTarget = false;
+            flash.color = new Color(1f, 0.95f, 0.9f, 0f);
+            float t = 0;
+            while (t < 0.12f) { t += Time.deltaTime; flash.color = new Color(1f, 0.95f, 0.9f, Mathf.Lerp(0f, 0.9f, t / 0.12f)); yield return null; }
+            string dir = System.IO.Path.Combine(Application.persistentDataPath, "Screenshots");
+            System.IO.Directory.CreateDirectory(dir);
+            string path = System.IO.Path.Combine(dir, $"farm_{System.DateTime.Now:yyyyMMdd_HHmmss}.png");
+            try { ScreenCapture.CaptureScreenshot(path); }
+            catch (System.Exception e) { gm.Announce("Photo failed: " + e.Message); }
+            while (t < 0.45f) { t += Time.deltaTime; flash.color = new Color(1f, 0.95f, 0.9f, Mathf.Lerp(0.9f, 0f, (t - 0.12f) / 0.33f)); yield return null; }
+            Destroy(flash.gameObject);
+            if (Application.platform != RuntimePlatform.WebGLPlayer)
+                gm.Announce($"Picture taken! Saved to Screenshots/");
+            else
+                gm.Announce("Picture taken! (desktop saves it to Screenshots/)");
+        }
+
         public void CloseMenu()
         {
             menuPanel.SetActive(false);
@@ -2680,14 +2737,14 @@ titlePanel = new GameObject("Title");
         {
             var gm = GameManager.I;
             if (gm == null || hotbarSlots[0] == null) return;
-            Sprite[] icons = { SpriteBank.HoeIcon, SpriteBank.CanIcon, SpriteBank.CropSprites[0, 3], SpriteBank.CropSprites[1, 3], SpriteBank.CropSprites[2, 3], SpriteBank.CropSprites[3, 3], SpriteBank.CropSprites[4, 3], SpriteBank.CropSprites[5, 3], SpriteBank.HandIcon };
-            for (int i = 0; i < 9; i++)
+            Sprite[] icons = { SpriteBank.HoeIcon, SpriteBank.CanIcon, SpriteBank.CropSprites[0, 3], SpriteBank.CropSprites[1, 3], SpriteBank.CropSprites[2, 3], SpriteBank.CropSprites[3, 3], SpriteBank.CropSprites[4, 3], SpriteBank.CropSprites[5, 3], SpriteBank.CropSprites[6, 3], SpriteBank.HandIcon };
+            for (int i = 0; i < 10; i++)
             {
                 hotbarIcons[i].sprite = icons[i];
                 hotbarSlots[i].color = i == gm.SelectedSlot ? new Color(1f, 0.85f, 0.9f, 1f) : Color.white;
                 int item = gm.Hotbar[i];
                 int count = -1;
-                if (item >= 2 && item <= 7) count = gm.Seeds[item - 2];
+                if (item >= 2 && item <= 8) count = gm.Seeds[item - 2];
                 hotbarCounts[i].text = count >= 0 ? count.ToString() : "";
                 hotbarCounts[i].gameObject.SetActive(count > 0);
             }

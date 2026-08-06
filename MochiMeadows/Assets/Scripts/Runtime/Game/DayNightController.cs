@@ -27,6 +27,7 @@ namespace MochiMeadows.Game
         public Color SeasonTint = Color.white;
         public float SeasonTintWeight;
         public float RainFactor;
+        public bool Active = true;
         public bool RainClouds;
         SpriteRenderer[] stars;
         SpriteRenderer[] clouds;
@@ -84,7 +85,7 @@ namespace MochiMeadows.Game
         void Update()
         {
             if (Gm == null) return;
-            if (Gm.IsPaused) return;
+            if (Gm.IsPaused || !Active) return;
             float m = Gm.ClockMinutes;
 
             currentSky = SampleSky(m);

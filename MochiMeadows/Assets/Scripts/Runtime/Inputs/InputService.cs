@@ -45,9 +45,10 @@ namespace MochiMeadows.Inputs
             MenuPressed = Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.JoystickButton7) || Input.GetKeyDown(KeyCode.M);
 
             HotbarPressed = null;
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < 10; i++)
             {
-                if (Input.GetKeyDown(KeyCode.Alpha1 + i)) { HotbarPressed = i; break; }
+                var key = i == 9 ? KeyCode.Alpha0 : KeyCode.Alpha1 + i;
+                if (Input.GetKeyDown(key)) { HotbarPressed = i; break; }
             }
             float scroll = Input.GetAxis("Mouse ScrollWheel");
             if (scroll > 0.01f) HotbarPressed = NextSlot(1);

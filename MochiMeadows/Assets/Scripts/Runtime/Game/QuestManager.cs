@@ -18,6 +18,7 @@ namespace MochiMeadows.Game
             new FishDef { Id = 0, Name = "Goldfish", SellPrice = 25, Weight = 50 },
             new FishDef { Id = 1, Name = "Bubble Fish", SellPrice = 40, Weight = 32 },
             new FishDef { Id = 2, Name = "Sakura Fish", SellPrice = 70, Weight = 18 },
+            new FishDef { Id = 3, Name = "Moon Jelly", SellPrice = 55, Weight = 12 },
         };
     }
 

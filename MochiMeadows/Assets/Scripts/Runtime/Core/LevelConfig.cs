@@ -31,13 +31,34 @@ namespace MochiMeadows.Core
     public class LevelPath { public int x0, y0, x1, y1; }
 
     [Serializable]
-    public class LevelSpots { public int[] shop; public int[] questBoard; public int[] blanket; public int[] kitchen; }
+    public class LevelSpots
+    {
+        public int[] shop;
+        public int[] questBoard;
+        public int[] blanket;
+        public int[] kitchen;
+        public int[] houseDoor;      // meadow door leading inside
+        public int[] interiorDoor;   // inside door leading out
+    }
 
     [Serializable]
     public class LevelTree { public int x, y; public bool peach; }
 
     [Serializable]
     public class LevelFlowers { public int count = 22; public int seed = 20260802; }
+
+    [Serializable]
+    public class GroundOverride { public int x, y, t; }   // t: 0 grass, 1 path, 2 water
+
+    [Serializable]
+    public class LevelInterior
+    {
+        public int width = 14, height = 12;
+        public LevelFloat2 bed;       // sleep spot
+        public LevelFloat2 kitchen;   // cooking counter
+        public int[] rug;             // [x, y]
+        public int[] window;          // [x, y]
+    }
 
     [Serializable]
     public class LevelConfig
@@ -52,6 +73,8 @@ namespace MochiMeadows.Core
         public LevelTree[] trees;
         public LevelFloat2[] chickens;
         public LevelFlowers flowers;
+        public LevelInterior interior;
+        public GroundOverride[] ground;
 
         public static LevelConfig Current { get; private set; }
 
@@ -104,6 +127,8 @@ namespace MochiMeadows.Core
                     questBoard = new[] { 6, 15 },
                     blanket = new[] { 30, 4 },
                     kitchen = new[] { 28, 5 },
+                    houseDoor = new[] { 33, 4 },
+                    interiorDoor = new[] { 6, 1 },
                 },
                 trees = new[]
                 {
@@ -120,6 +145,14 @@ namespace MochiMeadows.Core
                     new LevelFloat2 { x = 23.5f, y = 13.8f },
                 },
                 flowers = new LevelFlowers { count = 22, seed = 20260802 },
+                interior = new LevelInterior
+                {
+                    width = 14, height = 12,
+                    bed = new LevelFloat2 { x = 10.5f, y = 8.5f },
+                    kitchen = new LevelFloat2 { x = 2.5f, y = 9.5f },
+                    rug = new[] { 6, 5 },
+                    window = new[] { 6, 11 },
+                },
             };
         }
     }
