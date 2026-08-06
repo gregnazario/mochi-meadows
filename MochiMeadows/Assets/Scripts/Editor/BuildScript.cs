@@ -20,7 +20,14 @@ namespace MochiMeadows.EditorTools
         public static void BuildWebGL() => Build(WebGLPath, BuildTarget.WebGL, BuildTargetGroup.WebGL);
 
         [MenuItem("Tools/Mochi Meadows/Build Android APK")]
-        public static void BuildAndroid() => Build("Builds/Android/MochiMeadows.apk", BuildTarget.Android, BuildTargetGroup.Android);
+        public static void BuildAndroid()
+        {
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            UnityEngine.Debug.Log("arch set to " + PlayerSettings.Android.targetArchitectures);
+            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel23;
+            PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
+            Build("Builds/Android/MochiMeadows.apk", BuildTarget.Android, BuildTargetGroup.Android);
+        }
 
         [MenuItem("Tools/Mochi Meadows/Build iOS (Xcode project)")]
         public static void BuildiOS() => Build("Builds/iOS", BuildTarget.iOS, BuildTargetGroup.iOS);
@@ -66,6 +73,11 @@ namespace MochiMeadows.EditorTools
             ConfigurePlayer(target, group);
 
             EditorUserBuildSettings.SwitchActiveBuildTarget(group, target);
+            if (target == BuildTarget.Android)
+            {
+                PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+                UnityEngine.Debug.Log("[Build] arch after switch: " + PlayerSettings.Android.targetArchitectures);
+            }
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
                 scenes = new[] { SceneBuilder.ScenePath },
@@ -87,10 +99,12 @@ namespace MochiMeadows.EditorTools
             PlayerSettings.resizableWindow = true;
             PlayerSettings.runInBackground = true;
             PlayerSettings.colorSpace = ColorSpace.Gamma;
-            // IL2CPP is required by WebGL; standalone builds use Mono
-            // (works without an activated Pro/Plus IL2CPP entitlement).
+            // IL2CPP is required by WebGL and Android (Unity 6 dropped Mono2x
+            // on Android); standalone builds use Mono (no IL2CPP entitlement).
             PlayerSettings.SetScriptingBackend(group,
-                target == BuildTarget.WebGL ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x);
+                (target == BuildTarget.WebGL || target == BuildTarget.Android)
+                    ? ScriptingImplementation.IL2CPP
+                    : ScriptingImplementation.Mono2x);
 
             if (target == BuildTarget.WebGL)
             {
