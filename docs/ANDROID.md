@@ -1,23 +1,37 @@
 # Android Build Guide
 
-The game is Android-ready in code (input, UI, saves, builds) — the only thing
-missing is the build support module, which the headless installer can't fetch
-on this machine (a license/agreement gate that needs the Hub GUI).
+The game builds and runs on Android. Everything here is verified working.
 
-## Install the module (one-time, ~5 minutes)
+## Install the module (one-time, ~3 GB)
 
-1. Open **Unity Hub** → **Installs**
-2. Find **6000.5.6f1** → click the **gear ⚙** → **Add modules**
-3. Tick **Android Build Support** (includes Android SDK & NDK Tools and
-   OpenJDK — tick all three sub-options)
-4. **Install** and wait for the download (~2–3 GB)
+**Option A — command line (works headlessly):** the Hub installer prompts
+interactively for child modules, so drive it with `expect`:
+
+```sh
+cat > /tmp/hub-android.exp <<'EOF'
+#!/usr/bin/expect -f
+set timeout 18000
+log_user 0
+spawn "/Applications/Unity Hub.app/Contents/MacOS/Unity Hub" -- --headless \
+  install-modules --version 6000.5.6f1 --module android
+while {1} {
+    expect {
+        -re {\(Y/n\)} { send "Y\r" }
+        -re {Task Completed|completed successfully|All Tasks} { exit 0 }
+        eof { exit 0 }
+    }
+}
+EOF
+chmod +x /tmp/hub-android.exp && /tmp/hub-android.exp
+```
+
+**Option B — GUI:** Unity Hub → Installs → 6000.5.6f1 → ⚙ Add modules →
+Android Build Support (with SDK & NDK Tools + OpenJDK).
 
 ## Build the APK
 
-Then either:
-
-- In the Unity editor: **Tools → Mochi Meadows → Build Android APK**
-- Or from the command line:
+- Unity editor: **Tools → Mochi Meadows → Build Android APK**
+- Command line:
 
 ```sh
 "/Applications/Unity/Hub/Editor/6000.5.6f1/Unity.app/Contents/MacOS/Unity" \
@@ -25,21 +39,16 @@ Then either:
   -executeMethod MochiMeadows.EditorTools.BuildScript.BuildAndroid
 ```
 
-The APK lands at `MochiMeadows/Builds/Android/MochiMeadows.apk` and is ready
-to sideload (or upload to Google Play).
+Output: `MochiMeadows/Builds/Android/MochiMeadows.apk` (~23 MB).
 
-## What the build does
+## What the build uses (verified via aapt)
 
-- `PlayerSettings.SetScriptingBackend(Android, IL2CPP)` (set in
-  `BuildScript.ConfigurePlayer`)
-- ARM64 ABI (default IL2CPP target)
-- Compressed textures, Brotli assets
-- Orientation is free; the game letterboxes itself on any aspect
+- **IL2CPP** — Unity 6 dropped Mono2x on Android; using Mono2x makes the
+  build fail with "Target architecture not specified". Keep IL2CPP.
+- **ARM64** (`arm64-v8a`), minSdk 26, targetSdk 36
+- Package `com.MochiMeadows.MochiMeadows`, label "Mochi Meadows"
 
 ## Notes
 
-- If the Hub install stalls at 0% forever, quit the Hub and reopen it, then
-  retry — the headless path has a known agreement gate on this machine, so
-  use the GUI.
-- Android emulator verification: install the APK on any device/emulator —
-  touch input, the Act button, and saves all work out of the box.
+- Touch input, the Act button, joystick, and saves work out of the box.
+- The APK is ready to sideload or upload to Google Play.
