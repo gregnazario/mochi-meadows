@@ -20,13 +20,15 @@ namespace MochiMeadows.Art
         public static Sprite Pumpkitten0, Pumpkitten1, Pumpkitten2, Pumpkitten3;
         public static Sprite Sakura0, Sakura1, Sakura2, Sakura3;
         public static Sprite Melon0, Melon1, Melon2, Melon3;
+        public static Sprite BunnyCarrot0, BunnyCarrot1, BunnyCarrot2, BunnyCarrot3;
         public static Sprite MochiRice0, MochiRice1, MochiRice2, MochiRice3;
         public static Sprite HoeIcon, CanIcon, HandIcon;
         public static Sprite[,] CropSprites;
         public static Sprite Chicken0, Chicken1, Chicken2;
         public static Sprite ChickenPink0, ChickenPink1, ChickenPink2;
-        public static Sprite Goldfish, BubbleFish, SakuraFish;
-        public static Sprite Egg, KitchenTable, Lantern, Gnome, Beehive, Honey;
+        public static Sprite Goldfish, BubbleFish, SakuraFish, MoonJelly;
+        public static Sprite Egg, KitchenTable, Lantern, Gnome, Beehive, Honey, WindChime, Rug;
+        public static Sprite WallTile, FloorTile, Bed, WindowTile, Door;
 
         static Dictionary<char, Color> PlayerPal, MochiPal, TilePal, CropPal, SkyPal, ItemPal, ChickenPal, ChickenPinkPal, FishPal;
 
@@ -1170,6 +1172,78 @@ namespace MochiMeadows.Art
                 "................",
                 "................");
 
+            BunnyCarrot0 = S("BunnyCarrot0", true, CropPal,
+                "................",
+                ".....ll.........",
+                ".....ll.........",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................");
+
+            BunnyCarrot1 = S("BunnyCarrot1", true, CropPal,
+                ".....ll.........",
+                ".....ll.........",
+                ".....ll.........",
+                "....llll........",
+                "....llll........",
+                ".....oo.........",
+                ".....oo.........",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................");
+
+            BunnyCarrot2 = S("BunnyCarrot2", true, CropPal,
+                ".....ll.........",
+                "....llll........",
+                ".....ll.........",
+                "....llll........",
+                "...llllll.......",
+                "....llll........",
+                "....oo..........",
+                "...oooo.........",
+                "...oooo.........",
+                "....ooo.........",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................");
+
+            BunnyCarrot3 = S("BunnyCarrot3", true, CropPal,
+                "..r...ll...r....",
+                "..rll.ll.llr....",
+                "....llll........",
+                "...llllll.......",
+                "....llll........",
+                "....oooo........",
+                "...oooooo.......",
+                "..oo.ooo.oo.....",
+                "..o..ooo..o.....",
+                ".....ooo........",
+                "....oo.oo.......",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................");
+
             // --- Fish (16x10, swimming left) ---
             Goldfish = S("Goldfish", true, FishPal,
                 ".......oooooo...",
@@ -1206,6 +1280,18 @@ namespace MochiMeadows.Art
                 "..rrrrrrrrrrrr..",
                 "....rrrr.rr.rr..",
                 ".........rr.....");
+
+            MoonJelly = S("MoonJelly", true, FishPal,
+                "......ww........",
+                ".....wWWW.......",
+                "....wWwwWw......",
+                "...wWwwwwWw.....",
+                "..wWwwwwwwWw....",
+                "..wWwwwwwwWw....",
+                "...wWwwwwWw.....",
+                "....wWwwWw......",
+                ".....wWWW.......",
+                "......ww........");
 
             // --- Eggs, kitchen & decor ---
             Egg = S("Egg", true, ItemPal,
@@ -1280,6 +1366,42 @@ namespace MochiMeadows.Art
                 "................",
                 "................");
 
+            WindChime = S("WindChime", true, TilePal,
+                "................",
+                "..dd....dd......",
+                "..dd....dd......",
+                "..dddddddd......",
+                "..d.dddd.d......",
+                "..d.dddd.d......",
+                "..d..dd..d......",
+                "..d..dd..d......",
+                "..d..bb..d......",
+                "..d..gg..d......",
+                "..d..yy..d......",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................");
+
+            Rug = S("Rug", true, TilePal,
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "..rrrrrrrrrr....",
+                ".rrrrrrrrrrr....",
+                ".rrpprrrrppr....",
+                ".rrrrrrrrrrr....",
+                "..rrrrrrrrrr....",
+                "................",
+                "................",
+                "................",
+                "................");
+
             Beehive = S("Beehive", true, TilePal,
                 "................",
                 "................",
@@ -1313,6 +1435,96 @@ namespace MochiMeadows.Art
                 "................",
                 "................",
                 "................",
+                "................",
+                "................");
+
+            WallTile = S("WallTile", true, TilePal,
+                "cccccccccccccccc",
+                "cccccccccccccccc",
+                "cccccPPccPPccccc",
+                "cccccccccccccccc",
+                "cccccccccccccccc",
+                "ccPPcccccPPccccc",
+                "cccccccccccccccc",
+                "cccccccccccccccc",
+                "cccccPPccPPccccc",
+                "cccccccccccccccc",
+                "cccccccccccccccc",
+                "ccPPcccccPPccccc",
+                "cccccccccccccccc",
+                "cccccccccccccccc",
+                "cccccPPccPPccccc",
+                "cccccccccccccccc");
+
+            FloorTile = S("FloorTile", true, TilePal,
+                "dddddddddddddddd",
+                "dDDdDDdDDdDDdDDd",
+                "dddddddddddddddd",
+                "dDDdDDdDDdDDdDDd",
+                "dddddddddddddddd",
+                "dDDdDDdDDdDDdDDd",
+                "dddddddddddddddd",
+                "dDDdDDdDDdDDdDDd",
+                "dddddddddddddddd",
+                "dDDdDDdDDdDDdDDd",
+                "dddddddddddddddd",
+                "dDDdDDdDDdDDdDDd",
+                "dddddddddddddddd",
+                "dDDdDDdDDdDDdDDd",
+                "dddddddddddddddd",
+                "dDDdDDdDDdDDdDDd");
+
+            Bed = S("Bed", true, TilePal,
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "..wwwwwwwwwwww..",
+                ".wwwwwwwwwwwwww.",
+                ".wwwppppppppwww.",
+                ".wwwppppppppwww.",
+                ".wwwppppppppwww.",
+                ".wwwpPPppPPpwww.",
+                ".wwwwwwwwwwwwww.",
+                ".dddddddddddddd.",
+                "..dd........dd..",
+                "..dd........dd..",
+                "................");
+
+            WindowTile = S("WindowTile", true, TilePal,
+                "................",
+                "....dddddddd....",
+                "...dbbbbbbbbd...",
+                "...dbWbbbbWbd...",
+                "...dbbbbbbbbd...",
+                "...dbWbbbbWbd...",
+                "...dbbbbbbbbd...",
+                "....dddddddd....",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................");
+
+            Door = S("Door", true, TilePal,
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "....dddddddd....",
+                "....dwwwwwwd....",
+                "....dwwwwwwd....",
+                "....dwwwwwwd....",
+                "....dwwwwwwd....",
+                "....dwwwwwwd....",
+                "....dwwwwwwd....",
+                "....dddddddd....",
                 "................",
                 "................");
 
@@ -1720,7 +1932,7 @@ namespace MochiMeadows.Art
                 "................");
 
             // Seed packet icons (reuse crop art, 12x12 inside packet bg drawn in UI)
-            CropSprites = new Sprite[6, 4]
+            CropSprites = new Sprite[7, 4]
             {
                 { Strawberry0, Strawberry1, Strawberry2, Strawberry3 },
                 { Blueberry0, Blueberry1, Blueberry2, Blueberry3 },
@@ -1728,6 +1940,7 @@ namespace MochiMeadows.Art
                 { Sakura0, Sakura1, Sakura2, Sakura3 },
                 { Melon0, Melon1, Melon2, Melon3 },
                 { MochiRice0, MochiRice1, MochiRice2, MochiRice3 },
+                { BunnyCarrot0, BunnyCarrot1, BunnyCarrot2, BunnyCarrot3 },
             };
         }
 

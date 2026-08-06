@@ -77,9 +77,13 @@ namespace MochiMeadows.EditorTools
             {
                 IconGenerator.EnsureIcons();
             }
-            if (target == BuildTarget.WebGL)
+            else if (target == BuildTarget.WebGL)
             {
-                IconGenerator.EnsureIcons();
+                // PWA icons only (no icon kinds on WebGL)
+                var big = IconGenerator.RenderIcon(1024);
+                IconGenerator.WritePng(big, "Assets/WebGLTemplates/MochiPWA/icons/icon-512.png");
+                IconGenerator.WritePng(IconGenerator.RenderIcon(192), "Assets/WebGLTemplates/MochiPWA/icons/icon-192.png");
+                IconGenerator.WritePng(IconGenerator.RenderIcon(180), "Assets/WebGLTemplates/MochiPWA/icons/apple-touch-icon.png");
             }
             if (target == BuildTarget.Android)
             {

@@ -126,6 +126,7 @@ namespace MochiMeadows.Core
 
             BuildCameras();
             var world = BuildWorld();
+            var house = BuildHouse();
             var farm = BuildFarm(world, gm);
             var (player, mochi) = BuildCharacters(farm);
             var critters = BuildCritters(farm);
@@ -161,12 +162,22 @@ namespace MochiMeadows.Core
             gm.Ui = ui;
             gm.Init(farm, ui, player, mochi, audio);
 
+            var maps = gameObject.AddComponent<MapManager>();
+            maps.Init(world, house, mainCam, gm);
+
             var rig = gameObject.AddComponent<CameraRig>();
             rig.Init(mainCam, player.transform, farm, this);
 
             if (gm.DevPlaytest)
             {
                 gameObject.AddComponent<PlaytestSimulator>();
+            }
+            if (System.Environment.GetCommandLineArgs().Any(a => a == "-edit"))
+            {
+                var editor = gameObject.AddComponent<LevelEditor>();
+                editor.Init(world);
+                GameManager.I.Ui.EditorActive = true;
+                GameManager.I.Announce("Level editor on: tap items below, then tap the world");
             }
             InitComplete = true;
         }
@@ -224,6 +235,13 @@ namespace MochiMeadows.Core
                 if (args.Contains("-screenshot-quest")) GameManager.I.Ui.OpenQuests();
                 else GameManager.I.Ui.OpenMenu();
                 if (args.Contains("-screenshot-controls")) GameManager.I.Ui.ShowControls();
+            }
+            if (args.Contains("-screenshot-house"))
+            {
+                yield return null;
+                yield return null;
+                GameManager.I.Ui.StartGame(false);
+                MapManager.I.EnterHouse(GameManager.I, GameManager.I.Player);
             }
             if (args.Contains("-screenshot-game") || args.Contains("-screenshot-shop") || iosShotMode)
             {
@@ -343,6 +361,17 @@ namespace MochiMeadows.Core
                 }
             }
 
+            // ground overrides (level editor output)
+            if (lvl.ground != null)
+            {
+                foreach (var g in lvl.ground)
+                {
+                    var sr = MakeTile(ground, g.x, g.y,
+                        g.t == 1 ? SpriteBank.Path0 : g.t == 2 ? SpriteBank.WaterTile : PickGround(g.x, g.y));
+                    sr.sortingOrder = g.t == 2 ? -4 : -5;
+                }
+            }
+
             // pond
             if (lvl.pond != null)
             {
@@ -400,6 +429,9 @@ namespace MochiMeadows.Core
             var kspot = lvl.spots != null && lvl.spots.kitchen != null ? lvl.spots.kitchen : new[] { 28, 5 };
             var kitchen = MakeTile(root, kspot[0], kspot[1], SpriteBank.KitchenTable);
             kitchen.sortingOrder = 3;
+            var hspot = lvl.spots != null && lvl.spots.houseDoor != null ? lvl.spots.houseDoor : new[] { 33, 4 };
+            var houseDoor = MakeTile(root, hspot[0], hspot[1], SpriteBank.Door);
+            houseDoor.sortingOrder = 3;
             return root;
         }
 
@@ -556,11 +588,61 @@ namespace MochiMeadows.Core
             return winterCanopy;
         }
 
+        // --- farmhouse interior (level-driven) ---
+        Transform BuildHouse()
+        {
+            var root = new GameObject("House").transform;
+            root.SetParent(transform, false);
+            var lvl = LevelConfig.Current;
+            var intCfg = lvl.interior;
+            if (intCfg == null) { root.gameObject.SetActive(false); return root; }
+            int w = intCfg.width, h = intCfg.height;
+
+            // floor + walls
+            for (int x = 0; x < w; x++)
+            {
+                for (int y = 0; y < h; y++)
+                {
+                    bool wall = x == 0 || y == 0 || x == w - 1 || y == h - 1;
+                    var sr = MakeTile(root, x, y, wall ? SpriteBank.WallTile : SpriteBank.FloorTile);
+                    sr.sortingOrder = -4;
+                }
+            }
+
+            // window on the top wall
+            if (intCfg.window != null)
+            {
+                var win = MakeTile(root, intCfg.window[0], intCfg.window[1], SpriteBank.WindowTile);
+                win.sortingOrder = -1;
+            }
+
+            // rug
+            if (intCfg.rug != null)
+            {
+                var rug = MakeTile(root, intCfg.rug[0], intCfg.rug[1], SpriteBank.Rug);
+                rug.sortingOrder = -3;
+            }
+
+            // bed (2 tiles) + kitchen counter + door
+            var bed = MakeTile(root, (int)intCfg.bed.x, (int)intCfg.bed.y, SpriteBank.Bed);
+            bed.sortingOrder = -1;
+            var bed2 = MakeTile(root, (int)intCfg.bed.x - 1, (int)intCfg.bed.y, SpriteBank.Bed);
+            bed2.sortingOrder = -1;
+            var kitchen = MakeTile(root, (int)intCfg.kitchen.x, (int)intCfg.kitchen.y, SpriteBank.KitchenTable);
+            kitchen.sortingOrder = -1;
+            var doorSpot = lvl.spots != null && lvl.spots.interiorDoor != null ? lvl.spots.interiorDoor : new[] { 6, 1 };
+            var door = MakeTile(root, doorSpot[0], doorSpot[1], SpriteBank.Door);
+            door.sortingOrder = -1;
+
+            root.gameObject.SetActive(false);
+            return root;
+        }
+
         // --- farm ---
         FarmGrid BuildFarm(Transform worldRoot, GameManager gm)
         {
             var farmGo = new GameObject("Farm");
-            farmGo.transform.SetParent(transform, false);
+            farmGo.transform.SetParent(worldRoot, false);
             var farm = farmGo.AddComponent<FarmGrid>();
 
             var tileRoot = new GameObject("Tiles").transform;
@@ -696,15 +778,16 @@ namespace MochiMeadows.Core
             float rectAspect = (cam.rect.width * Screen.width) / (cam.rect.height * Screen.height);
             float halfW = halfH * rectAspect;
 
-            float minX = halfW, maxX = GameBootstrap.WorldW - halfW;
-            float minY = halfH, maxY = GameBootstrap.WorldH - halfH;
+            var bounds = MapManager.I != null ? MapManager.I.CurrentBounds : new RectInt(0, 0, GameBootstrap.WorldW, GameBootstrap.WorldH);
+            float minX = halfW, maxX = bounds.width - halfW;
+            float minY = halfH, maxY = bounds.height - halfH;
 
             Vector3 p = target.position;
             p.x = Mathf.Clamp(p.x, minX, maxX);
             p.y = Mathf.Clamp(p.y, minY, maxY);
             // if the view is wider/taller than the world (extreme aspects), center it
-            if (minX > maxX) p.x = GameBootstrap.WorldW * 0.5f;
-            if (minY > maxY) p.y = GameBootstrap.WorldH * 0.5f;
+            if (minX > maxX) p.x = bounds.width * 0.5f;
+            if (minY > maxY) p.y = bounds.height * 0.5f;
             p.z = -10;
 
             Vector3 pos = Vector3.Lerp(cam.transform.position, p, Time.deltaTime * 6f);

@@ -6,7 +6,7 @@ using MochiMeadows.Art;
 namespace MochiMeadows.Game
 {
     public enum Season { Spring = 0, Summer = 1, Autumn = 2, Winter = 3 }
-    public enum CropId { Strawberry = 0, Blueberry = 1, Pumpkitten = 2, Sakura = 3, Melon = 4, MochiRice = 5 }
+    public enum CropId { Strawberry = 0, Blueberry = 1, Pumpkitten = 2, Sakura = 3, Melon = 4, MochiRice = 5, BunnyCarrot = 6 }
 
     public class CropDef
     {
@@ -43,6 +43,8 @@ namespace MochiMeadows.Game
                           SeedPrice = 60, SellPrice = 150, GrowthDays = 5, MinYield = 1, MaxYield = 2, Season = Season.Summer, Tint = Palette.Leaf },
             new CropDef { Id = CropId.MochiRice, Name = "Mochi Rice", SeedName = "Mochi Rice Seeds", Yum = "Soft & squishy!",
                           SeedPrice = 35, SellPrice = 90, GrowthDays = 3, MinYield = 1, MaxYield = 2, Season = Season.Winter, Tint = Palette.White },
+            new CropDef { Id = CropId.BunnyCarrot, Name = "Bunny Carrot", SeedName = "Bunny Carrot Seeds", Yum = "Hop-hop! So crunchy!",
+                          SeedPrice = 20, SellPrice = 45, GrowthDays = 3, MinYield = 1, MaxYield = 3, Season = Season.Spring, Tint = Palette.Orange },
         };
 
         public static CropDef Get(CropId id) => All[(int)id];

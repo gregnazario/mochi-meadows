@@ -1,12 +1,12 @@
 # ninja log v5
-1	55	1786039439494153133	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	16a8791feeb8cede
-55	105	1786039439533173812	/Users/greg/git/kawaii-game/MochiMeadows/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/4b04q2f3/obj/arm64-v8a/libswappywrapper.so	935170614441dbae
-1	316	1786039439753140508	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	e22674dcb8d5d5bf
-0	318	1786039439755724801	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	4608f9524a461442
-1	329	1786039439765557429	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	ee967692baef8270
-0	332	1786039439768972472	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	49430576583e785a
-0	355	1786039439792207146	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	6ec86293bcc3b771
-1	375	1786039439812138027	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	2a608e6eef388389
-1	437	1786039439873437172	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	b51b7f1b963af9df
-0	481	1786039439918058603	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	fc12922852783035
-481	519	1786039439955295074	/Users/greg/git/kawaii-game/MochiMeadows/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/4b04q2f3/obj/arm64-v8a/libgame.so	eb316126140d89c9
+1	60	1786059234622296726	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	16a8791feeb8cede
+60	104	1786059234660851130	/Users/greg/git/kawaii-game/MochiMeadows/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/4b04q2f3/obj/arm64-v8a/libswappywrapper.so	935170614441dbae
+0	329	1786059234888814327	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	e22674dcb8d5d5bf
+0	330	1786059234890214067	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	4608f9524a461442
+0	338	1786059234898448970	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	49430576583e785a
+1	341	1786059234901889946	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	ee967692baef8270
+0	360	1786059234920554653	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	6ec86293bcc3b771
+1	382	1786059234943291039	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	2a608e6eef388389
+0	443	1786059235003536629	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	b51b7f1b963af9df
+0	487	1786059235047542371	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	fc12922852783035
+487	521	1786059235081824679	/Users/greg/git/kawaii-game/MochiMeadows/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/4b04q2f3/obj/arm64-v8a/libgame.so	eb316126140d89c9

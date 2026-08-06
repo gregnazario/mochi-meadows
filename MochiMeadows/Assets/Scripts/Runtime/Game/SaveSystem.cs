@@ -11,21 +11,21 @@ namespace MochiMeadows.Game
         public float clockMinutes;
         public int money;
         public float energy;
-        public int[] seeds = new int[6];
-        public int[] basket = new int[6];
-        public int[] fishBasket = new int[3];
+        public int[] seeds = new int[7];
+        public int[] basket = new int[7];
+        public int[] fishBasket = new int[4];
         public int eggBasket;
         public int honeyBasket;
         public int collectedCropsMask, collectedFishMask;
         public bool collectedEgg, collectedHoney;
         public int totalEarned;
-        public int[] decorInventory = new int[4];
+        public int[] decorInventory = new int[6];
         public int decorCount;
         public int[] decorX = new int[GameManager.DecorMax];
         public int[] decorY = new int[GameManager.DecorMax];
         public int[] decorType = new int[GameManager.DecorMax];
         public int selectedSlot;
-        public int[] hotbar = new int[9];
+        public int[] hotbar = new int[10];
         // plots as parallel arrays
         public int[] plotState = new int[FarmGrid.MaxW * FarmGrid.MaxH];
         public int[] plotCrop = new int[FarmGrid.MaxW * FarmGrid.MaxH];
@@ -37,6 +37,7 @@ namespace MochiMeadows.Game
         public float mochiX, mochiY;
         public int activeW, activeH, expansionTier;
         public int outfitDress, outfitHair, ownedDressesMask, ownedHairsMask;
+        public bool indoors;
         public bool hasSave;
     }
 
@@ -48,6 +49,7 @@ namespace MochiMeadows.Game
         {
             var data = new SaveData();
             var farm = gm.Farm;
+            data.indoors = Core.MapManager.I != null && Core.MapManager.I.Indoors;
             data.outfitDress = gm.OutfitDress;
             data.outfitHair = gm.OutfitHair;
             data.ownedDressesMask = gm.OwnedDressesMask;

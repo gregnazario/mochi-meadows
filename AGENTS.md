@@ -88,10 +88,28 @@ then build, then run the playtest.
    ```
    -screenshot            title screen
    -screenshot-game       in-game (+ optional -day N, -outfit N, -expanded)
+   -screenshot-house      farmhouse interior
    -screenshot-menu       pause menu   (-screenshot-controls adds controls page)
    -screenshot-quest | -shop | -makeover | -fish | -rain | -scrapbook | -newgame
    -export-art | -export-level        writes editable content to app support
+   -edit                   in-game level editor: pick a palette item, tap tiles
+                           to place/remove ground, decor, trees, spots, Save level
    ```
+
+## Browser tests
+
+Headless Playwright checks for the WebGL build (layout, title, Start flow,
+tap-to-farm). Run from `tools/browser-test`: `npm install && node test.js`
+(live site) or `node test.js http://localhost:8000` (local). Needs a Chromium
+binary; set `CHROME_PATH` if not found. Exit 0 = pass.
+
+## WebGL template
+
+The PWA template (`Assets/WebGLTemplates/MochiPWA`) is installable/offline
+(manifest + service worker + generated icons). The icon is procedurally
+rendered at build time (lavender + Mochi + heart); if it looks blank, the
+`spriteBank.BuildAll()` guard in `IconGenerator.RenderIcon` is what makes the
+cat appear in headless builds.
 
 3. **UI/art changes**: verify with pixel checks (sampling exact colors) or the
    vision tool, then re-run the screenshot modes that cover the changed
@@ -155,6 +173,18 @@ Then `xcrun simctl install/launch`. **iOS launch args never reach Unity** —
 dev screenshot modes work via `defaults write` into the app container's
 `Library/Preferences/com.Mochi-Meadows.Mochi-Meadows.plist` with the
 `mochi_dev_shot` key (read once then deleted).
+
+## Maps & editor
+
+- Two maps: the meadow and the farmhouse interior (`LevelConfig.interior`).
+  `MapManager` toggles the world roots; the farm is parented under the world
+  root so it hides with the meadow (the farm freezing while indoors is
+  intentional — crops never wither in the house).
+- Weather/day-night components live on the bootstrap GameObject — never
+  `SetActive(false)` them (it kills the bootstrap coroutines); gate via their
+  `Active` flag instead.
+- The level editor (`-edit`) writes ground overrides (`level.ground`) and
+  mutates trees/decor/spots, saved via `-export-level` style export.
 
 ## Known pitfalls (learned the hard way)
 

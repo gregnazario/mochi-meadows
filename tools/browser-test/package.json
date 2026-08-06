@@ -1,0 +1,13 @@
+{
+  "name": "mochi-browser-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Headless browser tests for the Mochi Meadows WebGL build (layout, taps, console errors)",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "playwright-core": "^1.44.0",
+    "pngjs": "^7.0.0"
+  }
+}
