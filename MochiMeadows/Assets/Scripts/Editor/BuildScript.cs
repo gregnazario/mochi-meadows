@@ -73,6 +73,14 @@ namespace MochiMeadows.EditorTools
             ConfigurePlayer(target, group);
 
             EditorUserBuildSettings.SwitchActiveBuildTarget(group, target);
+            if (target == BuildTarget.Android || target == BuildTarget.iOS)
+            {
+                IconGenerator.EnsureIcons();
+            }
+            if (target == BuildTarget.WebGL)
+            {
+                IconGenerator.EnsureIcons();
+            }
             if (target == BuildTarget.Android)
             {
                 PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
@@ -113,8 +121,8 @@ namespace MochiMeadows.EditorTools
                 // GitHub Pages / static hosts don't send Content-Encoding: br;
                 // this makes the loader decompress brotli in the browser instead.
                 PlayerSettings.WebGL.decompressionFallback = true;
-                // Custom template: canvas fills the browser window (responsive).
-                PlayerSettings.WebGL.template = "PROJECT:MochiMeadows";
+                // PWA template: installable + offline, canvas fills the window.
+                PlayerSettings.WebGL.template = "PROJECT:MochiPWA";
             }
         }
     }
