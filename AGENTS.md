@@ -120,10 +120,16 @@ cd .. && git worktree remove /tmp/mochi-pages && git worktree prune
 
 ## Git quirks on this machine
 
-- Pushes can **fail silently** (`git push` prints "and the repository
-  exists." and exits non-zero via the pipe). Always check `git ls-remote
-  origin` after pushing; the repo-local `core.sshCommand` points at
-  `~/.ssh/id_mldsa44_ed25519` (the Keeper agent key may vanish).
+- **Use HTTPS, not SSH.** The SSH key (`~/.ssh/id_mldsa44_ed25519`) has been
+  rejected by GitHub intermittently (and the Keeper agent socket keeps
+  dying). The remote is already set to
+  `https://github.com/gregnazario/mochi-meadows.git` with `gh` as the
+  credential helper (`gh auth setup-git`). If pushes start failing with
+  "no such identity: ~/.ssh/id_ed25519", re-run `gh auth setup-git` and
+  check `git remote -v` is the https URL.
+- Pushes can **fail silently** (a piped `git push` exits non-zero while
+  printing only the error's last line). Always check `git ls-remote origin`
+  after pushing.
 - Branch `gh-pages` holds only the web build; `main` holds source.
 - Never commit directly to `main` (global rule) — but note the repo was
   initialized with the first commit on main (hosting setup); use branches +
