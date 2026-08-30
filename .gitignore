@@ -25,3 +25,10 @@
 
 # logs
 *.log
+
+# Node
+node_modules/
+
+# Misc
+bin/
+.env
